@@ -553,7 +553,9 @@ export function diffEventProjection(previous, current) {
 }
 
 export async function buildProjection(config) {
-  const matrix = await jsonFile(config.freezeMatrixPath)
+  const frozenMatrix = await optionalJson(config.freezeMatrixPath)
+  const matrix = frozenMatrix || { regions: [], bindings: { active: {} }, environment: {}, totalMarker: { status: 'not-frozen' },
+    memory: {}, defaultSafety: { writeEnabled: false, embeddingEnabled: false, autoCaptureEnabled: false } }
   const regions = await Promise.all(matrix.regions.map(async (frozen) => {
     const path = join(config.brainRoot, ...frozen.manifest.split('/'))
     const manifest = await jsonFile(path)
@@ -577,12 +579,12 @@ export async function buildProjection(config) {
   const moodRuntime = await optionalJson(join(config.brainRoot, '脑区运行状态', '心情', 'runtime.json'))
   const thinkingRuntime = await optionalJson(join(config.brainRoot, '脑区运行状态', '思考', 'runtime.json'))
   const executionRuntime = await optionalJson(join(config.brainRoot, '脑区运行状态', '执行', 'runtime.json'))
-  const matrixSha256 = await fileSha256(config.freezeMatrixPath)
+  const matrixSha256 = await fileSha256(config.freezeMatrixPath).catch(() => null)
 
   return {
     schema: 'fish-brain-readonly-projection-v2',
     generatedAt: new Date().toISOString(),
-    sourceClass: 'authority-backed',
+    sourceClass: frozenMatrix ? 'authority-backed' : 'runtime-unfrozen',
     binding: {
       id: matrix.bindings.active.id,
       profile: matrix.bindings.active.profile,
@@ -663,7 +665,10 @@ export async function buildHistory(config) {
 }
 
 export async function buildEvidence(config) {
-  const matrix = await jsonFile(config.freezeMatrixPath)
+  const matrix = await optionalJson(config.freezeMatrixPath)
+  if (!matrix) return { schema: 'fish-brain-evidence-summary-v1', status: 'unavailable',
+    sourceClass: 'runtime-unfrozen', marker: null, matrix: null, manifests: [], items: [],
+    privacy: { evidenceBodyReturned: false, promptReturned: false, memoryBodyReturned: false, fullSessionIdReturned: false } }
   const items = await Promise.all((matrix.evidence || []).map(async (entry) => {
     const path = join(config.brainRoot, ...entry.path.split('/'))
     let currentSha256 = null

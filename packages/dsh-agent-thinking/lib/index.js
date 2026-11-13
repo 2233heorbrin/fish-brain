@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { isFishAgent } from '../../../internal/agent-scope.js'
 
 import {
   classifyTask, decideFinalStatus, decideUnknownAction, nextRetryState,
@@ -284,6 +285,7 @@ export function apply(ctx, config = {}) {
   runtime.load()
   const mounted = new Map()
   const mountAgent = (agent) => {
+    if (!isFishAgent(ctx, agent)) return
     if (!agent?.id || mounted.has(agent.id) || (!cfg.includeSubagents && isChildSession(agent.session))) return
     const stops = []
     stops.push(agent.ctx.on('system-prompt/assemble', async (_assembly, context, next) => {
@@ -304,6 +306,7 @@ export function apply(ctx, config = {}) {
     stopAgentCreated = ctx.on('agent/created', ({agent}) => { mountAgent(agent) })
   }
   const stopAssemble = ctx.on('system-prompt/assemble', async (_assembly, context, next) => {
+    if (!isFishAgent(ctx, context?.agent)) return next()
     try {
       const agent = context?.agent
       const event = latestEligibleUserMessage(agent?.session)
@@ -314,11 +317,13 @@ export function apply(ctx, config = {}) {
     return {...accepted, contexts:[...contexts,{name:'agent:thinking',text:runtime.promptText(),interpolate:false}]}
   }, {prepend:true})
   const stopPreStep = ctx.on('agent/pre-step', async (payload, next) => {
+    if (!isFishAgent(ctx, payload?.agent)) return next()
     try { for (const message of payload?.messages || []) runtime.ingestMessage(payload.agent, message) }
     catch (error) { ctx.logger?.warn?.('dsh-agent-thinking pre-step failed: ' + String(error?.message || error)) }
     return next()
   }, {prepend:true})
-  const promptEntry = {name:'agent:thinking',order:cfg.order,required:true,text:() => {
+  const promptEntry = {name:'agent:thinking',order:cfg.order,required:true,text:context => {
+      if (!isFishAgent(ctx, context?.agent)) return ''
       try { return runtime.promptText() }
       catch (error) { ctx.logger?.warn?.('dsh-agent-thinking render failed: ' + String(error?.message || error)); return '' }
     }}

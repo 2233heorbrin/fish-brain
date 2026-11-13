@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto'
 import fs from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
+import { isFishAgent } from '../../../internal/agent-scope.js'
 
 import {
   CONFIG as CORE_CONFIG,
@@ -255,6 +256,7 @@ export function apply(ctx, config = {}) {
   if (cfg.moodEnabled !== true) return
   const runtime = new MoodRuntime(cfg)
   const stopPreStep = ctx.on('agent/pre-step', async (payload, next) => {
+    if (!isFishAgent(ctx, payload?.agent)) return next()
     try {
       for (const message of payload?.messages || []) runtime.ingestMessage(payload.agent, message)
     } catch (error) {
@@ -263,6 +265,7 @@ export function apply(ctx, config = {}) {
     return next()
   }, { prepend: true })
   const stopEvent = ctx.on('session/event', (session, event) => {
+    if (!isFishAgent(ctx, ctx.agents?.get(session.id))) return
     try {
       runtime.ingest(session, event)
     } catch (error) {
@@ -272,7 +275,8 @@ export function apply(ctx, config = {}) {
   const stopPrompt = ctx.inject(['systemPrompt'], (scope) => scope.systemPrompt.context({
     name: 'agent:mood',
     order: cfg.order,
-    text: () => {
+    text: context => {
+      if (!isFishAgent(ctx, context?.agent)) return ''
       try {
         return runtime.render()
       } catch (error) {

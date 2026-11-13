@@ -21,6 +21,7 @@
 //   ③ **超预算要写在正文里，不许静默截断。** 截断了模型的视野里是看不出来的。
 
 import fs from 'node:fs';
+import { isFishAgent } from '../../../internal/agent-scope.js'
 
 export const name = 'dsh-memory-shipei';
 
@@ -113,6 +114,7 @@ export function apply(ctx, config) {
   function render(context) {
     try {
       const agent = context && context.agent;
+      if (!isFishAgent(ctx, agent)) return '';
       if (!cfg.includeSubagents && looksLikeChild(agent)) return '';
 
       const now = new Date();
@@ -145,7 +147,7 @@ export function apply(ctx, config) {
           if (sid) self = self.replace(/- 本容器：`[^`]*`/, '- 本容器：`' + sid + '`');
         } catch { /* 覆盖失败就用原样，不影响注入 */ }
         if (!self) {
-          lines.push('【自我层】★ SELF.md 读不到（' + cfg.selfPath + '）—— 跑 `node <你的记忆库目录>/self.mjs` 重新装配。');
+          // Empty templates are valid; the initialization page reports their state.
         } else {
           const bytes = Buffer.byteLength(self, 'utf8');
           if (bytes > cfg.maxBytes) {
@@ -177,7 +179,7 @@ export function apply(ctx, config) {
       scope.systemPrompt.context({
         name: 'agent:door-sign',
         order: cfg.doorSignOrder,
-        text: DOOR_SIGN,
+        text: context => isFishAgent(ctx, context?.agent) ? DOOR_SIGN : '',
       });
     }
   });

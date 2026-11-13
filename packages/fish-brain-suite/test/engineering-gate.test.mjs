@@ -19,6 +19,9 @@ test('engineering switch limits only fish across native preset selection and res
     const standard = (await r.create('engineering-standard', 'standard')).agent
     const selected = (await r.create('engineering-select', 'standard')).agent
     const existingFish = (await r.create('engineering-existing-fish', 'fish')).agent
+    // Match rc.5's real dsh-tool-subagent: its tool is registered in the
+    // Agent's own layer, which native restrict() deliberately does not mask.
+    existingFish.ctx.tools.register(existingFish.ctx.tools.get('worker', existingFish))
     fiber = r.ctx.plugin(gate, { statePath })
     await fiber.await()
     const names = async agent => (await r.assembly(agent)).tools.map(tool => tool.name)
@@ -26,6 +29,7 @@ test('engineering switch limits only fish across native preset selection and res
     assert((await names(standard)).includes('write'))
     assert(!JSON.stringify(await call(standard, 'write')).includes('已拒绝'))
     assert(!(await names(existingFish)).includes('write'))
+    assert(!(await names(existingFish)).includes('worker'))
     await r.ctx.agentPresets.select(selected, 'fish')
     assert(!(await names(selected)).includes('write'))
     assert(!(await names(selected)).includes('worker'))

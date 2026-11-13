@@ -72,18 +72,29 @@ export function apply(ctx, config = {}) {
   const tracked = new Map()
 
   function presetOf(agent) {
-    try {
-      const list = ctx.agentPresets.inspectCompositions(agent.ctx)
-      if (!Array.isArray(list) || list.length === 0) return undefined
-      return list[0].id
-    } catch {
-      return undefined
-    }
+    return ctx.agentPresets.composedPreset(agent.ctx)
   }
 
   function engage(entry, agent) {
     if (CONTROLLED.length === 0 || entry.hide !== undefined) return
-    entry.hide = agent.ctx.tools.hide(CONTROLLED)
+    // rc.5 masks inherited tools using the native scoped restrict API. Restrict
+    // rejects unknown names, so intersect with the actual native composition.
+    const tools = agent.ctx.tools
+    if (typeof tools.hide === 'function') entry.hide = tools.hide(CONTROLLED)
+    else {
+      const inherited = tools.view(agent).restrictableNames
+      const deny = CONTROLLED.filter(name => inherited.has(name))
+      const unmask = deny.length ? tools.restrict({ deny }) : () => {}
+      // rc.5 intentionally exempts tools registered in the Agent's own layer
+      // from restrict(). The fixed worker is such a tool. Use the existing
+      // native prompt waterfall for its model-facing definition; the monotonic
+      // execution guard below also rejects retained handles.
+      const unfilter = agent.ctx.on('system-prompt/assemble', async (_assembly, _context, next) => {
+        const assembly = await next()
+        return enabled ? assembly : { ...assembly, tools: assembly.tools.filter(tool => !CONTROLLED_SET.has(tool.name)) }
+      })
+      entry.hide = () => { unfilter(); unmask() }
+    }
     entry.guard = agent.ctx.tools.guard((exec) => {
       if (enabled) return undefined
       const toolName = typeof exec?.name === 'string' ? exec.name : ''
@@ -122,9 +133,7 @@ export function apply(ctx, config = {}) {
   }
 
   /* 已存在的 Agent（重启后恢复的会话）与后续新建的 Agent 都要覆盖 */
-  try {
-    for (const agent of ctx.agents.list()) track(agent)
-  } catch { /* 服务未就绪时由 agent/created 兜底 */ }
+  for (const agent of ctx.agents.list()) track(agent)
   ctx.on('agent/created', ({ agent }) => { track(agent) })
   // DSH 在空白会话中原地切换预设，不会再次触发 agent/created。
   ctx.on('session/event', (session, event) => {

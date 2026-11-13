@@ -1,121 +1,64 @@
 # fish-brain（鱼的脑）
 
-> DeepSeek Harness（DSH）上的「全脑组合」：把**人格（SELF）、只读记忆检索、心情、思考策略卡**装进 agent 的上下文，再用两道**门**控制「谁能协作、谁能碰工程工具」。
->
-> A "whole brain" bundle for DSH: persona (SELF), read-only memory recall, mood and thinking strategy cards injected into an agent's context, plus two gates controlling collaboration and engineering tools.
+本轮开发版将人格、只读记忆、心情、思考、执行内核和控制模块打进一个 DSH bundle，不再要求手动安装十几个内部包。
 
-本仓库是一个 **monorepo**，包含 11 个包：
+**官方原版仍受宿主接口阻塞，配套扩展为隔离验证原型。** 根入口检测实际 `agentLoop.releaseExact(agent)` 能力：官方 rc.5 显示 `FISH_EXACT_AGENT_RELEASE_UNAVAILABLE`；具备本轮明确标记的宿主扩展时，挂载现有生命周期、fish Preset、脑区与可逆控制门。插件不会自动修改宿主。
 
-| 包 | 作用 | 角色 |
-|---|---|---|
-| `fish-brain-suite` | 组合层：持有 `fish-plugins.json`（全脑清单）、控制接口 `./control`、生命周期 | 必需 |
-| `fish-brain-ui` | 设置页「脑」面板：脑区投影、事件图、记忆摘要、过滤/搜索 | 推荐 |
-| `dsh-agent-thinking` | 思考：策略卡 / 能力索引注入（`thinking-core` 为内核） | 推荐 |
-| `thinking-core` | 思考内核（策略卡解析、作用域、状态读写） | 内核 |
-| `dsh-agent-mood` | 心情：状态机 + 衰减 + 极短注入（`dsh-mood-core` 为内核） | 可选 |
-| `dsh-mood-core` | 心情内核 | 内核 |
-| `dsh-memory-shipei` | 人格（SELF）：把 `SELF.compat.md` 作为 persona 前缀注入 | 可选 |
-| `fish-memory-readonly-tools` | 只读记忆：`fish_memory_search`（依赖第三方 `mnemon`，**不随仓库分发**） | 可选 |
-| `dsh-agent-execution` | 执行：受限 Worker 运行时驱动（只在明确需要时启用） | 可选 |
-| `fish-agent-collab-gate` | 协作门：关闭时拒绝 `subagent` / `subagent_fork` / `worker` 的执行准入 | 可选 |
-| `fish-engineering-tools-gate` | 工程工具门：只对指定 agent 隐藏并拦截原生工程写工具 | 可选 |
+## 安装入口与运行要求
 
-## 安装
+需要 DSH 和 Node `>=22.14`。目前仅对官方 DSH `0.2.1-rc.5` 的下述能力做过隔离验证，不声称支持其他版本或完整启停。
 
-### 先决条件
+当前版本为 `0.0.2`。可使用 GitHub 根仓库入口；开发者也可在仓库根目录执行 `npm pack --ignore-scripts` 得到 `fish-brain-0.0.2.tgz`，通过 DSH 原生插件管理提交 `file:<绝对 tgz 路径>`。启停仍由原生插件选择控制。已验证的完整功能需要下文说明的配套宿主扩展，普通官方 rc.5 安装不会自动获得该扩展。
 
-- DSH ≥ `0.2.1-rc.2`（本仓库在作者本机 `0.2.1-rc.5` 上验证）
-- **宿主能力（必须自行确认）**：`fish-brain-suite/control` 要求 `ctx.agentLoop.releaseExact`（原生 AgentHandle 释放能力）。
-  - 作者本机 rc.5 上该接口存在（`dsh-agent-loop` 内可检索到），但**该 rc.5 是否包含本地宿主补丁，官方 npm 包是否具备，作者未做独立核验**；
-  - 若你的宿主没有该函数，控制器会直接抛 `fish-brain requires native AgentHandle releaseExact support`；
-  - 请先在目标宿主上确认该接口存在，再安装本套件。
-- 可选安装「鱼的身体 / 鱼的手」以获得审核安装流程。
+无需设置作者路径或 vendor 环境变量，也无需单独安装 `packages/` 下的内核。
 
-### 环境变量（推荐用环境变量配置，不改源码）
+## 首次初始化与数据
 
-| 变量 | 作用 | 缺省 |
-|---|---|---|
-| `FISH_BRAIN_ROOT` | 脑根目录；替换 `fish-plugins.json` 与 UI 配置里的 `<FISH_BRAIN_ROOT>` | 无（占位符保留为空串） |
-| `FISH_PROFILE_DIR` | profile 目录；替换 `<PROFILE_DIR>`，并作为两个 gate 的状态文件位置 | 当前工作目录 |
-| `FISH_MNEMON_ROOT` | 第三方 mnemon 安装目录 | `<repo>/vendor/mnemon` |
-| `FISH_MEMORY_DIR` | 只读记忆数据目录 | `~/.dsh/fish-brain/memory/documents-readonly` |
-| `FISH_SELF_PATH` | `SELF.compat.md`（人格正文，自备） | 空 |
-| `FISH_PERSONA_STATE` | 人格运行状态文件 | 空 |
-| `FISH_COLLAB_STATE` / `FISH_TOOLS_GATE_STATE` | 两道门的状态文件 | `<FISH_PROFILE_DIR>/agent-collab.json`、`…/engineering-tools.json` |
-| `FISH_SUPERAGENT_ROOT` | `dsh-agent-execution` 的执行内核 | `<repo>/vendor/superagent-engine-adapter` |
-| `FISH_EXECUTION_STATE_DIR` | 执行状态目录 | `brain/脑区运行状态/执行` |
+每个 DSH Profile 保存一份 `<Profile>/fish-data.json`，鱼脑和身体共用：
 
-> `fish-plugins.json` 里四个脑区插件现在用**包名**引用（`dsh-memory-shipei`、`fish-memory-readonly-tools`、`dsh-agent-mood`、`dsh-agent-thinking`），因此这些包必须先装进同一个 profile；未安装时 suite 会因找不到插件而报错。
-
-### 方式一：市场子目录规格（推荐）
-
-```
-github:2233heorbrin/fish-brain/tree/main/packages/fish-brain-suite
-github:2233heorbrin/fish-brain/tree/main/packages/fish-brain-ui
-github:2233heorbrin/fish-brain/tree/main/packages/dsh-agent-thinking
-github:2233heorbrin/fish-brain/tree/main/packages/thinking-core
-github:2233heorbrin/fish-brain/tree/main/packages/dsh-agent-mood
-github:2233heorbrin/fish-brain/tree/main/packages/dsh-mood-core
-github:2233heorbrin/fish-brain/tree/main/packages/dsh-memory-shipei
-github:2233heorbrin/fish-brain/tree/main/packages/fish-memory-readonly-tools
-github:2233heorbrin/fish-brain/tree/main/packages/dsh-agent-execution
-github:2233heorbrin/fish-brain/tree/main/packages/fish-agent-collab-gate
-github:2233heorbrin/fish-brain/tree/main/packages/fish-engineering-tools-gate
+```json
+{"schema":"fish-profile-data/v1","root":"<绝对数据根目录>","components":["brain","body"],"origin":"conversation-workspace"}
 ```
 
-### 方式二：克隆后按本地路径安装
+- 尚未初始化时，从**当前主对话实际绑定的工作区**取根目录；不使用进程 cwd、安装目录或最近会话。没有有效工作区时显示“待选择工作区”，在页面选文件夹后继续。
+- 先装脑或先装身体均可，后装者复用绑定，只补齐自己的目录。两个插件可以分别安装。
+- 绑定后切换会话不换根。页面显示实际路径，可打开对应文件夹。
+- 手动切换数据位置只更新绑定、补齐新目录，**不会搬迁旧数据**。已经挂载的身体后端需要重新加载才能使用新根，期间拒绝向旧根启动新流程。
+- 多个 Profile 各有绑定。可以人为选择相同数据根；这不会合并 Agent、开关或其他配置。
+- 升级时保留通过配置传入的有效旧根及已有文件，只补缺失结构。旧根失效时保留原路径并提示重选，不自动换位置。
+- 页面分别显示目录初始化和程序准备状态；`host-blocked` 不是完整功能就绪。失败显示原因，可点“重试准备”。
 
-```bash
-git clone https://github.com/2233heorbrin/fish-brain.git
-cd fish-brain
-dsh plugin --profile <profile> add file:<克隆路径>/packages/fish-brain-suite
-# 其余按上表按需安装
+## 人格与记忆
+
+初始化创建 `<根>/鱼的大脑/{人格,记忆,心情,思考,执行,脑区运行状态}` 及实际消费者需要的结构。
+
+- 人格正文：`人格/generated/SELF.compat.md`，首次为空，由你填写。说明放在独立 README，不注入作者事实。
+- 空白记忆：`脑区运行状态/记忆/documents-readonly/documents/index.json` 及 active/archived 目录，使用实际 Documents 只读适配器，空检索返回零结果。
+- 思考运行卡、能力索引首次为空；不预填角色、关系或私人经历。
+- 已有正文使用不覆盖创建方式保留。数据不会作为程序依赖下载。
+
+## 依赖和 Agent 作用域
+
+正常包安装声明并固定 `dsh-mnemon-source-documents@0.5.11`、`dsh-mnemon@0.5.32`、`@deepseek-ai/schemastery@3.18.5`、`@deepseek-ai/cordis@4.0.5`。同时显式提供 mnemon 所需的 `@deepseek-ai/dsh-typert-protocol@0.2.1-rc.5`、`react@18.3.1` 和 `react-dom@18.3.1`，不依赖用户手动补齐，也不修改宿主 React。心情、思考和执行适配内核随发行物分发，见 THIRD-PARTY-NOTICES。依赖不在每轮对话重新安装。
+
+原生 Preset 挂载测试中，人格、记忆、心情、思考、执行工具和协作门均以原生 `fish` 身份判断作用域，standard/默认 Agent 和其他 Agent 不接收这些内容。Worker 固定原生进程内 `spawn`、`standard`、`maxDepth=1`、`modelSelectionSettings=false`；合成人格与记忆不进入 Worker。不会自动修改当前或默认 Agent。
+
+根入口现已接通现有生命周期；关闭保留原生 fish 入口、释放原生 handle 和 Preset lease，历史保留并按代际准入。不能用取消轮次代替完整释放。隔离扩展版与官方原版的验收结果分别记录，不互相替代。
+
+## 官方宿主阻塞
+
+官方 `dsh-agent-loop@0.2.1-rc.5` 的 create/resume 返回带 dispose 的 handle，但会话控制器创建 Agent 后没有公开该 handle 的精确释放入口。现有 Agent.cancel/idle、subagents.drainDescendants 无法代替完整释放。
+
+本轮隔离扩展 `releaseExact(agent)` 复用创建时保存的原生 handle，核对确切对象后等待原生 dispose；不改写 AgentFactory、AgentLoop 轮次实现或会话存储。这不是官方原有 API，未应用到生产。完整补丁、官方/扩展对照与运行证据见隔离验收报告。
+
+## 开发验证
+
+测试要求先将 tgz 独立安装到临时目录，`FISH_TEST_INSTALL_ROOT` 指向该目录。`FISH_DSH_TEST_ANCHOR` 指向临时安装的官方 DSH 依赖环境 package.json。
+
+```sh
+node --test test/distribution.test.mjs test/official-native.test.mjs
 ```
 
-> ⚠️ 带审核流程的「鱼手」安装器目前只接受**仓库根目录有 `package.json`** 的来源；monorepo 子目录会报 `SOURCE_PACKAGE_JSON_MISSING`。请用市场/原生安装，或把单个包拆成独立仓库。
+覆盖初始化、两种安装顺序、持久化、切根不迁移、旧数据保留、空记忆、失败重试、实际组件导入、原生 standard→fish 选择及 Worker 隔离。测试不调用真实模型。桌面选择器与真实聊天的验收状态见隔离验收报告；上下文测试不调用真实模型。
 
-## 装完必须改的本地路径
-
-`fish-brain-suite/cordis.patch.yml` 里用两个占位符（**改配置，不改源代码**）：
-
-| 占位符 | 换成 |
-|---|---|
-| `<FISH_BRAIN_ROOT>` | 你的「鱼的脑」根目录（放 `总说明/`、`脑区运行状态/` 等） |
-| `<PROFILE_DIR>` | 你的 DSH profile 目录（`agent-collab.json`、`engineering-tools.json` 所在处） |
-
-两处都可以不改 YAML：在启动 DSH 的环境里设置 `FISH_BRAIN_ROOT` / `FISH_PROFILE_DIR`，控制器会在读取 `fish-plugins.json` 时替换占位符（见上一节环境变量表）。
-
-## 未随仓库提供的部分（重要）
-
-| 依赖 | 状态 | 说明 |
-|---|---|---|
-| `mnemon`（第三方只读记忆库） | **不随仓库分发** | `fish-memory-readonly-tools` 默认从 `../../vendor/mnemon` 解析，或用 `FISH_MNEMON_ROOT` 指定；不装则 `fish_memory_search` 不可用，其余脑区不受影响 |
-| `SELF.compat.md`（人格正文） | **刻意不提供** | 这是使用者自己的内容；`dsh-memory-shipei` 只负责把它注入，仓库只给结构约定，不放任何人的正文 |
-| `思考运行卡.txt` / 能力索引 | **需自行准备** | 同上，`dsh-agent-thinking` 读的是你的策略卡文件 |
-| 冻结矩阵 `全脑V1冻结矩阵.json` | **需自行准备** | `fish-brain-ui` 用它做投影过滤，缺省时面板降级 |
-
-## 已知限制
-
-1. **`worker` 也会被协作门拦截**：`fish-agent-collab-gate` 的 `DISPATCH_TOOLS = ['subagent','subagent_fork','worker']`。早期文档写「worker 不受影响」，**与实现不符，已按实现更正**（`worker` 是 fish 预设的委派通道，属于派发入口）。
-2. **开启 `fish-agent-collab-gate` 后**，当前 agent 不能创建任何子 Agent（包括单个 Worker）；要恢复请在设置/插件页关掉该门，或把会话切到不带该门的预设。
-3. **`dsh-agent-execution` 默认不应常开**：它给 Worker 提供受限文件工具与固定 `node --test`，只在需要「执行型 Worker」时启用。
-4. **测试分两类**：`node --test packages/*/test/*.mjs` 默认只跑不需要真实宿主的用例；涉及真实 profile / 本机目录的集成用例需设置 `FISH_BRAIN_INTEGRATION=1`、`FISH_BRAIN_PROFILE=<profile 目录>`、`FISH_BRAIN_ROOT=<脑根目录>` 才会运行。
-
-## 安全边界
-
-- 记忆**只读**：仓库内没有写入记忆的代码路径。
-- 注入内容**来自使用者自己的文件**：本仓库不含任何人的 SELF 正文、关系、记忆或会话记录。
-- 开关**只能人来按**：两个门与生命周期开关都在设置/插件页，agent 无权自行开启。
-- **不碰凭据**：仓库内没有 token / 密钥读取逻辑。
-
-## 开发与测试
-
-```bash
-node --test packages/fish-brain-suite/test/*.test.mjs
-node --test packages/fish-brain-ui/test/*.test.mjs
-node --test packages/dsh-agent-*/test/*.test.mjs
-```
-
-## 许可
-
-MIT © 2026 酥软大肥鱼（2233heorbrin）
+MIT，第三方来源与许可见 THIRD-PARTY-NOTICES.md。

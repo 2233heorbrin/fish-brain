@@ -365,7 +365,7 @@ window.__ModuleLoader__.load({
       }, [
         React.createElement('div', { key: 'head', style: { display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' } }, [
           React.createElement('h2', { key: 't', style: { margin: 0, fontSize: '16px', fontWeight: 500 } }, '鱼的脑'),
-          React.createElement('span', { key: 'v', style: { fontSize: '11px', color: dark ? '#AEB5BB' : '#5A6670', fontFamily: 'monospace' } }, 'v1.0.0')
+          React.createElement('span', { key: 'v', style: { fontSize: '11px', color: dark ? '#AEB5BB' : '#5A6670', fontFamily: 'monospace' } }, 'v0.0.2')
         ]),
         React.createElement('p', { key: 'sub', style: { margin: '0 0 18px', fontSize: '12px', color: dark ? '#AEB5BB' : '#5A6670' } },
           '统一全脑事件星图 · 只读投影'),
@@ -410,7 +410,7 @@ window.__ModuleLoader__.load({
               id: 'collab', legacy: true,
               title: '允许创建子 Agent',
               desc: '允许 Agent 委派任务，可能增加 Token 消耗。',
-              note: '对当前工作区所有 Agent 生效，包含鱼的固定 standard Worker。',
+              note: '仅控制 fish 发起的委派，包含固定 standard Worker；独立 standard 和其他 Agent 不受影响。',
               state: collab, onToggle: onToggleCollab
             })
           ])

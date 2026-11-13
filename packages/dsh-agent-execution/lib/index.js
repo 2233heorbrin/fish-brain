@@ -4,12 +4,10 @@ import { EOL } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { performance } from 'node:perf_hooks'
+import { isFishAgent } from '../../../internal/agent-scope.js'
 
-/* superagent 执行内核不随本仓库分发：默认 <repo>/vendor/superagent-engine-adapter，
-   也可用 FISH_SUPERAGENT_ROOT 指向你的安装目录。 */
-const SUPERAGENT_ROOT = (process.env.FISH_SUPERAGENT_ROOT
-  || fileURLToPath(new URL('../../vendor/superagent-engine-adapter', import.meta.url))).replace(/[\\/]+$/, '')
-const {
+const SUPERAGENT_ROOT = fileURLToPath(new URL('../../superagent-engine-adapter', import.meta.url))
+import {
   AtomicTicketStore,
   buildResultPackage,
   createTickets,
@@ -17,7 +15,7 @@ const {
   runMockWorker,
   validateRuntimeDriver,
   validateWorkerReport,
-} = await import('file://' + SUPERAGENT_ROOT.replace(/\\/g, '/') + '/src/index.mjs')
+} from '../../superagent-engine-adapter/src/index.mjs'
 import {
   decideFinalStatus,
   reviewEvidence,
@@ -786,6 +784,7 @@ export function apply(ctx, config = {}) {
   const runtime = new ExecutionRuntime(cfg, {driver})
   const installed = new Map()
   const install = agent => {
+    if (!isFishAgent(ctx, agent)) return
     if (!agent?.ctx?.tools || installed.has(agent) || (!cfg.includeSubagents && isChildSession(agent.session))) return
     const dispose = agent.ctx.tools.register(toolDefinition(runtime))
     installed.set(agent, typeof dispose === 'function' ? dispose : ()=>{})

@@ -1,8 +1,9 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { readFile, writeFile, cp, mkdtemp } from 'node:fs/promises'
+import { readFile, writeFile, mkdir, mkdtemp } from 'node:fs/promises'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
+import { pathToFileURL } from 'node:url'
 import { runtime, mod } from './native-harness.mjs'
 import { observeRelease } from '../lib/native.js'
 import * as engGate from '../../fish-engineering-tools-gate/index.js'
@@ -154,10 +155,21 @@ test('actual fish adapters assemble only into fish; off restores native tools an
   await writeFile(join(directory, 'self.md'), 'Isolated fish SELF fixture')
   await writeFile(join(directory, 'personality.json'), '{}')
   for (const entry of plugins) {
+    if (!entry.name.startsWith('@') && !entry.name.startsWith('cordis:'))
+      entry.name = process.env.FISH_TEST_INSTALL_ROOT
+        ? pathToFileURL(join(process.env.FISH_TEST_INSTALL_ROOT, 'node_modules/fish-brain/packages', entry.name, 'lib/index.js')).href
+        : new URL('../../' + entry.name + '/lib/index.js', import.meta.url).href
     if (entry.id === 'dsh-memory-shipei') Object.assign(entry.config, { selfPath: join(directory, 'self.md'), statePath: join(directory, 'personality.json') })
     if (['dsh-agent-mood', 'dsh-agent-thinking'].includes(entry.id)) entry.config.stateDir = join(directory, entry.id)
+    if (entry.id === 'dsh-agent-thinking') {
+      await writeFile(join(directory, 'runtime-card.txt'), '')
+      await writeFile(join(directory, 'capabilities.json'), '{"capabilities":[]}')
+      entry.config.runtimeCardPath = join(directory, 'runtime-card.txt')
+      entry.config.capabilityIndexPath = join(directory, 'capabilities.json')
+    }
     if (entry.id === 'fish-memory-readonly-tools') {
-      await cp(entry.config.dataDir, join(directory, 'documents'), { recursive: true })
+      await mkdir(join(directory, 'documents/documents/active'), { recursive: true })
+      await writeFile(join(directory, 'documents/documents/index.json'), '{"version":1,"documents":[]}')
       entry.config.dataDir = join(directory, 'documents')
     }
   }
@@ -197,7 +209,7 @@ test('both self-owned gates disappear, preserve bytes and restore settings; othe
       await eng.await(); await collab.await()
       assert(names(await r.assembly(a)).includes('write'), 'engineering switch must preserve native tools')
       assert(JSON.stringify(await call('write')).includes('OTHER_PLUGIN_GUARD'))
-      assert(JSON.stringify(await call('subagent')).includes('已拒绝'), 'independent collaboration switch remains effective')
+      assert(!JSON.stringify(await call('subagent')).includes('已拒绝'), 'fish collaboration guard must not restrict independent standard')
       assert.equal(routes.size, 2)
       await observeRelease(r.ctx, [eng, collab], async () => {
         await eng.dispose(); await eng.await(); await collab.dispose(); await collab.await()

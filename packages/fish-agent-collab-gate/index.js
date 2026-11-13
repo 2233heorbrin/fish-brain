@@ -18,7 +18,7 @@ import { readFileSync, writeFileSync, renameSync, mkdirSync, existsSync } from '
 import { dirname } from 'node:path'
 
 export const name = 'fish-agent-collab-gate'
-export const inject = ['tools', 'connection']
+export const inject = ['tools', 'connection', 'agents', 'agentPresets']
 
 /** 派发类工具：关闭时一律拒绝执行准入（覆盖并行、串行与单个 Worker）。 */
 const DISPATCH_TOOLS = new Set(['subagent', 'subagent_fork', 'worker'])
@@ -74,6 +74,8 @@ export function apply(ctx, config = {}) {
   ctx.effect(
     () => ctx.tools.guard((exec) => {
       if (enabled) return undefined
+      const agent = exec.agent || ctx.agents.get(exec.session?.id || exec.sessionId)
+      if (!agent || ctx.agentPresets.composedPreset(agent.ctx) !== 'fish') return undefined
       const toolName = typeof exec?.name === 'string' ? exec.name : ''
       return DISPATCH_TOOLS.has(toolName) ? DENY_REASON : undefined
     }),

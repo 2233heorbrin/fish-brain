@@ -1,7 +1,7 @@
 {
   "name": "fish-brain",
-  "private": true,
-  "version": "1.0.0",
+  "private": false,
+  "version": "0.0.2",
   "description": "鱼的脑：DSH 上的全脑组合（人格 / 只读记忆 / 心情 / 思考 / 协作门 / 工程工具门）",
   "license": "MIT",
   "type": "module",
@@ -20,6 +20,73 @@
     "packages/*"
   ],
   "scripts": {
-    "test": "node --test packages/*/test/*.test.mjs"
+    "test": "node --test packages/*/test/*.test.mjs",
+    "test:distribution": "node --test test/distribution.test.mjs"
+  },
+  "main": "index.js",
+  "engines": {
+    "node": ">=22.14"
+  },
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "cordis.patch.yml",
+    "internal",
+    "THIRD-PARTY-NOTICES.md",
+    "packages/dsh-agent-execution/lib",
+    "packages/dsh-agent-execution/package.json",
+    "packages/dsh-agent-mood/lib",
+    "packages/dsh-agent-mood/package.json",
+    "packages/dsh-agent-thinking/lib",
+    "packages/dsh-agent-thinking/package.json",
+    "packages/dsh-memory-shipei/lib",
+    "packages/dsh-memory-shipei/package.json",
+    "packages/dsh-mood-core/src",
+    "packages/dsh-mood-core/package.json",
+    "packages/fish-agent-collab-gate/index.js",
+    "packages/fish-agent-collab-gate/package.json",
+    "packages/fish-brain-suite/lib",
+    "packages/fish-brain-suite/package.json",
+    "packages/fish-brain-suite/fish-plugins.json",
+    "packages/fish-brain-ui/lib",
+    "packages/fish-brain-ui/package.json",
+    "packages/fish-brain-ui/assets",
+    "packages/fish-engineering-tools-gate/index.js",
+    "packages/fish-engineering-tools-gate/package.json",
+    "packages/fish-memory-readonly-tools/lib",
+    "packages/fish-memory-readonly-tools/package.json",
+    "packages/superagent-engine-adapter/src",
+    "packages/superagent-engine-adapter/package.json",
+    "packages/superagent-engine-adapter/LICENSE",
+    "packages/thinking-core/src",
+    "packages/thinking-core/package.json",
+    "packages/dsh-mood-core/LICENSE"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-settings",
+        "@deepseek-ai/dsh-client-ui-workspace"
+      ]
+    }
+  },
+  "dependencies": {
+    "dsh-mnemon-source-documents": "0.5.11",
+    "dsh-mnemon": "0.5.32",
+    "@deepseek-ai/schemastery": "3.18.5",
+    "@deepseek-ai/cordis": "4.0.5",
+    "@deepseek-ai/dsh-typert-protocol": "0.2.1-rc.5",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
   }
 }

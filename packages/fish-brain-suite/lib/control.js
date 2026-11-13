@@ -41,7 +41,7 @@ function substitutePlaceholders(value, vars) {
 export async function apply(ctx, config) {
   const native = nativeModules(ctx)
   if (typeof ctx.agentLoop.releaseExact !== 'function') throw new Error('fish-brain requires native AgentHandle releaseExact support')
-  const rawFishPlugins = JSON.parse(readFileSync(config.fishPluginsPath || new URL('../fish-plugins.json', import.meta.url), 'utf8'))
+  const rawFishPlugins = config.fishPlugins || JSON.parse(readFileSync(config.fishPluginsPath || new URL('../fish-plugins.json', import.meta.url), 'utf8'))
   const fishPlugins = substitutePlaceholders(rawFishPlugins, {
     brainRoot: config.brainRoot || process.env.FISH_BRAIN_ROOT || '',
     profileDir: config.profileDir || process.env.FISH_PROFILE_DIR || '',
@@ -50,7 +50,7 @@ export async function apply(ctx, config) {
   ctx.provide('fishBrainLifecycle', lifecycle)
   installAdmissionHooks(ctx, lifecycle)
   ctx.effect(() => ctx.connection.fetch.register({
-    path: '/api/fish-brain-lifecycle/state', methods: ['GET', 'HEAD'],
+    path: '/api/fish-brain-lifecycle/state', methods: ['GET', 'HEAD'], requestBody: 'buffered',
     fetch: request => new Response(request.method === 'HEAD' ? null : JSON.stringify(lifecycle.state()), {
       headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' },
     }),

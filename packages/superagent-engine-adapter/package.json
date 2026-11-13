@@ -1,0 +1,7 @@
+{
+  "name": "fish-superagent-engine-adapter",
+  "version": "1.0.0-fish.1",
+  "type": "module",
+  "main": "src/index.mjs",
+  "license": "MIT"
+}
