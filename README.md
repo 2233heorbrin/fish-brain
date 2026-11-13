@@ -38,28 +38,28 @@
 
 ### 逐个安装（推荐：由市场安装）
 
-本仓库是 monorepo，DSH 的市场支持子目录规格：
+本仓库是 monorepo，DSH 的插件市场支持**子目录规格**（`…/tree/<branch>/<subdir>`）：
 
 ```
-dsh-github-add github:2233heorbrin/fish-brain/packages/fish-brain-suite
+github:2233heorbrin/fish-brain/tree/main/packages/fish-brain-suite
+github:2233heorbrin/fish-brain/tree/main/packages/fish-brain-ui
+github:2233heorbrin/fish-brain/tree/main/packages/fish-agent-collab-gate
+github:2233heorbrin/fish-brain/tree/main/packages/fish-engineering-tools-gate
 ```
 
-四个包依次安装（顺序不影响，但 `fish-brain-ui` 与两个 gate 需要 profile 里有入口行）：
+在市场里粘贴上面的规格即可安装；四个包顺序不影响（`fish-brain-ui` 与两个 gate 需要 profile 里有入口行）。
 
-| 包 | 安装规格 |
-|---|---|
-| 组合层 | `github:2233heorbrin/fish-brain/packages/fish-brain-suite` |
-| 脑 UI | `github:2233heorbrin/fish-brain/packages/fish-brain-ui` |
-| 协作门 | `github:2233heorbrin/fish-brain/packages/fish-agent-collab-gate` |
-| 工程门 | `github:2233heorbrin/fish-brain/packages/fish-engineering-tools-gate` |
-
-等价 CLI（子目录规格）：
+### 或者：克隆后按本地路径安装
 
 ```bash
-dsh plugin --profile <profile> add github:2233heorbrin/fish-brain#packages/fish-brain-suite
+git clone https://github.com/2233heorbrin/fish-brain.git
+dsh plugin --profile <profile> add file:<克隆路径>/packages/fish-brain-suite
+dsh plugin --profile <profile> add file:<克隆路径>/packages/fish-brain-ui
+dsh plugin --profile <profile> add file:<克隆路径>/packages/fish-agent-collab-gate
+dsh plugin --profile <profile> add file:<克隆路径>/packages/fish-engineering-tools-gate
 ```
 
-> ⚠️ 如果你用的是带审核流程的「鱼手」安装器，注意它目前**只接受仓库根目录有 `package.json`** 的来源（monorepo 子目录会报 `SOURCE_PACKAGE_JSON_MISSING`）。可先用 DSH 原生/市场安装，或把某个包单独拆成仓库。
+> ⚠️ 如果你用的是带审核流程的「鱼手」安装器：它目前**只接受仓库根目录有 `package.json`** 的来源（monorepo 子目录会报 `SOURCE_PACKAGE_JSON_MISSING`）。此时请用市场/原生安装，或把单个包拆成独立仓库。
 
 ### 装完必须改的本地路径
 
