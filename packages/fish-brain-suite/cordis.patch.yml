@@ -1,0 +1,17 @@
+- insert:
+    - id: fish-brain-suite
+      name: "fish-brain-suite"
+      config:
+        - id: fish-brain-ui
+          name: "fish-brain-ui"
+          config:
+            freezeMatrixPath: "D:/deepseek框架/鱼的大脑/总说明/全脑V1冻结矩阵.json"
+            brainRoot: "D:/deepseek框架/鱼的大脑"
+        - id: fish-agent-collab-gate
+          name: "fish-agent-collab-gate"
+          config:
+            statePath: "D:/deepseek框架/DSH/profiles/fish-main/agent-collab.json"
+        - id: fish-engineering-tools-gate
+          name: "fish-engineering-tools-gate"
+          config:
+            statePath: "D:/deepseek框架/DSH/profiles/fish-main/engineering-tools.json"

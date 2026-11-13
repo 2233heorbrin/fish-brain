@@ -1,0 +1,38 @@
+/* ============================================================
+ * 鱼的脑 · 工作区外壳（正式插件）
+ *
+ * 本页由 conversation.view:fish-brain 的 iframe 加载，容器内只有
+ * 星图工作区本身，工作区从 viewport 顶部铺满。
+ * ============================================================ */
+html,body{width:100%;height:100%;overflow:hidden}
+
+.ws{
+  position:absolute;inset:0;top:0;left:0;right:0;bottom:0;
+  z-index:1;
+}
+
+/* 详情与浮层始终位于画布之上 */
+.ws-pop{z-index:20}
+
+/* 只读状态与绑定信息 */
+.ws-ro{
+  font-size:10px;line-height:1;color:var(--ok);
+  border:1px solid rgba(111,169,140,.34);background:var(--ok-dim);
+  border-radius:4px;padding:3px 6px;white-space:nowrap;
+}
+
+/* 数据加载 / 读取失败状态条（画布内浮层，不占据布局高度） */
+.ws-status{
+  position:absolute;left:12px;top:10px;z-index:12;
+  display:flex;align-items:center;gap:8px;
+  padding:6px 10px;border-radius:6px;
+  background:rgba(12,16,19,.94);border:1px solid var(--line-2);
+  font-size:11px;color:var(--ink-3);
+  pointer-events:none;
+}
+.ws-status.is-error{border-color:rgba(190,108,94,.5);color:#E0A79C}
+.ws-status.is-stale{border-color:rgba(201,169,97,.5);color:#D8BE84}
+
+/* 让画布在 iframe 内正确吃到全部剩余高度 */
+.ws-main{min-height:0}
+.ws-stage{min-height:0}

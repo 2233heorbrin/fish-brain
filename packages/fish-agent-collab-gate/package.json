@@ -1,0 +1,23 @@
+{
+  "name": "fish-agent-collab-gate",
+  "version": "1.0.0",
+  "description": "多 Agent 协作开关：关闭时用 tools.guard 拒绝 subagent / subagent_fork 的执行准入，worker 与普通工具不受影响。",
+  "private": true,
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./package.json": "./package.json"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/2233heorbrin/fish-brain.git"
+  },
+  "homepage": "https://github.com/2233heorbrin/fish-brain",
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness",
+    "dsh"
+  ]
+}

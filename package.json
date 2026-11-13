@@ -1,0 +1,25 @@
+{
+  "name": "fish-brain",
+  "private": true,
+  "version": "1.0.0",
+  "description": "鱼的脑：DSH 上的全脑组合（人格 / 只读记忆 / 心情 / 思考 / 协作门 / 工程工具门）",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/2233heorbrin/fish-brain.git"
+  },
+  "homepage": "https://github.com/2233heorbrin/fish-brain",
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness",
+    "dsh",
+    "agent"
+  ],
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "test": "node --test packages/*/test/*.test.mjs"
+  }
+}

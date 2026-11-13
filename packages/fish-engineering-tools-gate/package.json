@@ -1,0 +1,23 @@
+{
+  "name": "fish-engineering-tools-gate",
+  "version": "1.0.0",
+  "description": "开启思考与执行：仅对 fish 隐藏并拦截原生工程工具，开启时恢复；standard 和其他 Agent 不受影响。",
+  "private": true,
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./package.json": "./package.json"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/2233heorbrin/fish-brain.git"
+  },
+  "homepage": "https://github.com/2233heorbrin/fish-brain",
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness",
+    "dsh"
+  ]
+}

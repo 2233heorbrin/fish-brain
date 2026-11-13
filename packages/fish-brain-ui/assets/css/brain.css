@@ -1,0 +1,288 @@
+/* 鱼的脑 · 工作区视觉层：顶栏 / 画布 / 详情 / 浮层（正式插件）
+   8D-1：工作区由宿主 document.body 下的固定定位 Portal 承载，覆盖实时测量到的
+   视图标签栏下沿到窗口底部；iframe 内部从 0 铺满，不再让出 --top-h 的演示外壳高度。 */
+.ws{
+  position:absolute;inset:0;
+  z-index:60;
+  display:flex;flex-direction:column;
+  background:var(--bg-1);
+  animation:ws-in .14s ease-out;
+}
+@keyframes ws-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+/* ---------- 工作区顶栏 ---------- */
+.ws-head{
+  height:var(--ws-head-h);flex:0 0 var(--ws-head-h);
+  display:flex;align-items:center;gap:12px;
+  padding:0 14px;
+  border-bottom:1px solid var(--line);
+  background:var(--bg-1);
+  position:relative;z-index:5;
+}
+.ws-brand{display:flex;align-items:center;gap:8px;min-width:0}
+.ws-brand b{font-size:13.5px;font-weight:500;letter-spacing:.01em}
+.ws-ro{
+  font-size:10.5px;line-height:1;padding:3px 6px;border-radius:4px;
+  color:var(--ok);background:var(--ok-dim);border:1px solid rgba(111,169,140,.26);
+}
+.ws-bind{font-family:var(--mono);font-size:11px;color:var(--ink-4);white-space:nowrap}
+
+.ws-tools{margin-left:auto;display:flex;align-items:center;gap:6px;min-width:0}
+.ws-search{
+  width:190px;height:28px;padding:0 9px;border-radius:var(--radius-sm);
+  border:1px solid var(--line-2);background:var(--bg-2);color:var(--ink);
+  font-size:12px;outline:none;
+  transition:border-color .12s,background .12s;
+}
+.ws-search::placeholder{color:var(--ink-4)}
+.ws-search:focus{border-color:#4A6E8C;background:var(--bg-3)}
+.ws-search::-webkit-search-cancel-button{display:none}
+
+.ws-btn{
+  height:28px;padding:0 10px;border-radius:var(--radius-sm);
+  border:1px solid var(--line-2);background:var(--bg-2);color:var(--ink-2);
+  font-size:12px;white-space:nowrap;
+  transition:background .12s,border-color .12s,color .12s;
+}
+.ws-btn:hover{background:var(--bg-hover);color:var(--ink);border-color:var(--line-3)}
+.ws-ghost{background:transparent;border-color:transparent;color:var(--ink-3)}
+.ws-ghost:hover{background:var(--bg-3);color:var(--ink)}
+.ws-btn.is-on{background:rgba(123,159,212,.12);border-color:rgba(123,159,212,.34);color:#C3D5EC}
+.ws-div{width:1px;height:16px;background:var(--line-2);margin:0 3px}
+.ws-back{
+  height:28px;padding:0 12px;border-radius:var(--radius-sm);
+  border:1px solid var(--line-2);background:var(--bg-2);color:var(--ink);
+  font-size:12px;
+}
+.ws-back:hover{background:var(--bg-hover);border-color:var(--line-3)}
+
+/* ---------- 脑区导航 ---------- */
+.ws-nav{
+  height:var(--ws-nav-h);flex:0 0 var(--ws-nav-h);
+  display:flex;align-items:center;gap:4px;
+  padding:0 14px;
+  border-bottom:1px solid var(--line);
+  background:var(--bg-1);
+  overflow-x:auto;scrollbar-width:none;
+}
+.ws-nav::-webkit-scrollbar{display:none}
+.ws-tab{
+  height:26px;padding:0 11px;border-radius:5px;flex:0 0 auto;
+  font-size:12px;color:var(--ink-3);
+  display:inline-flex;align-items:center;gap:6px;
+}
+.ws-tab:hover{background:var(--bg-2);color:var(--ink-2)}
+.ws-tab.is-on{background:var(--bg-3);color:var(--ink)}
+.ws-tab .dot{width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.9}
+.ws-tab[data-region="personality"] .dot{color:var(--p-personality)}
+.ws-tab[data-region="memory"] .dot{color:var(--p-memory)}
+.ws-tab[data-region="mood"] .dot{color:var(--p-mood)}
+.ws-tab[data-region="thinking"] .dot{color:var(--p-thinking)}
+.ws-tab[data-region="execution"] .dot{color:var(--p-execution)}
+.ws-tab[data-region="evidence"] .dot{color:var(--p-evidence)}
+.ws-count{margin-left:auto;font-size:11.5px;color:var(--ink-4);white-space:nowrap;font-family:var(--mono)}
+
+/* ---------- 主体 ---------- */
+.ws-main{
+  flex:1;min-height:0;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) var(--panel-w);
+  transition:grid-template-columns .16s ease;
+}
+.ws-main[data-panel="off"]{grid-template-columns:minmax(0,1fr) 0}
+.ws-main[data-panel="off"] .ws-panel{display:none}
+
+.ws-stage{position:relative;min-width:0;min-height:0;overflow:hidden;background:var(--bg)}
+#wsCanvas{display:block;width:100%;height:100%;outline:none;cursor:grab}
+#wsCanvas:focus-visible{box-shadow:inset 0 0 0 1px #4A6E8C}
+
+.ws-hint{
+  position:absolute;left:14px;bottom:12px;
+  font-size:11px;color:var(--ink-4);
+  pointer-events:none;
+  transition:opacity .2s;
+}
+
+.ws-empty{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:10px;padding:24px;text-align:center;
+  background:radial-gradient(60% 60% at 50% 46%,rgba(18,26,28,.92),rgba(8,10,12,.99));
+}
+.ws-empty h3{font-size:13.5px;font-weight:500;color:var(--ink-2)}
+.ws-empty p{font-size:12px;color:var(--ink-3);max-width:420px;line-height:1.7}
+
+/* ---------- 详情面板 ---------- */
+.ws-panel{
+  border-left:1px solid var(--line);
+  background:var(--bg-1);
+  display:flex;flex-direction:column;min-height:0;
+}
+.p-head{
+  flex:0 0 auto;padding:14px 16px 12px;
+  border-bottom:1px solid var(--line);
+  display:flex;align-items:flex-start;gap:10px;
+}
+.p-head .ttl{min-width:0;flex:1}
+.p-head .region{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:11px;color:var(--ink-3);
+}
+.p-head .region i{width:6px;height:6px;border-radius:50%;background:currentColor}
+.p-head h3{
+  margin-top:6px;font-size:14px;font-weight:500;line-height:1.55;color:var(--ink);
+  word-break:break-word;
+}
+.p-close{
+  width:26px;height:26px;flex:0 0 auto;border-radius:5px;
+  color:var(--ink-3);font-size:16px;line-height:1;
+}
+.p-close:hover{background:var(--bg-3);color:var(--ink)}
+
+.p-body{flex:1;min-height:0;overflow:auto;padding:4px 16px 24px}
+.p-sec{padding:13px 0;border-bottom:1px solid var(--line)}
+.p-sec:last-child{border-bottom:0}
+.p-sec h5{
+  font-size:10.5px;font-weight:500;color:var(--ink-4);
+  letter-spacing:.05em;margin-bottom:8px;
+}
+.p-kv{display:flex;gap:10px;align-items:baseline;min-height:22px}
+.p-kv .k{flex:0 0 74px;font-size:11.5px;color:var(--ink-4)}
+.p-kv .v{
+  flex:1;min-width:0;font-size:12px;color:var(--ink-2);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.p-kv .v.mono{font-family:var(--mono);font-size:11px}
+.p-stale{
+  margin:0 0 8px;padding:8px 10px;border-radius:6px;
+  background:var(--wait-dim);border:1px solid rgba(201,169,97,.36);
+  color:#D6BE8A;font-size:11.5px;
+}
+
+
+/* ---------- 筛选浮层 ---------- */
+.ws-pop{
+  position:absolute;top:calc(var(--ws-head-h) + var(--ws-nav-h) + 4px);right:14px;z-index:9;
+  width:250px;max-height:min(420px,66vh);overflow:auto;
+  background:var(--bg-2);border:1px solid var(--line-2);border-radius:9px;
+  box-shadow:0 24px 60px -18px rgba(0,0,0,.82);
+  padding:8px;
+  animation:pop-in .12s ease-out;
+}
+@keyframes pop-in{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
+.ws-pop h6{
+  font-size:10.5px;font-weight:400;color:var(--ink-4);
+  padding:4px 8px 7px;letter-spacing:.04em;
+}
+.ws-pop .pop-i{
+  display:flex;align-items:center;gap:8px;width:100%;
+  height:30px;padding:0 8px;border-radius:5px;
+  font-size:12px;color:var(--ink-2);text-align:left;
+}
+.ws-pop .pop-i:hover{background:var(--bg-3);color:var(--ink)}
+.ws-pop .pop-i.is-on{background:rgba(123,159,212,.1);color:#C3D5EC}
+.ws-pop .pop-i i{width:6px;height:6px;border-radius:50%;background:currentColor;flex:0 0 auto}
+.ws-pop .pop-i span{flex:1}
+.ws-pop .pop-i em{font-style:normal;font-size:11px;color:var(--ink-4);font-family:var(--mono)}
+.ws-pop .pop-note{
+  margin-top:6px;padding:7px 8px;border-top:1px solid var(--line);
+  font-size:11px;line-height:1.65;color:var(--ink-4);
+}
+
+/* ---------- 8E-F 中文事件卡片 ---------- */
+/* 详情：标签行 → 摘要主体 → 相关节点 → 折叠的技术信息 */
+.p-tags{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:10px 0 12px}
+.p-tag{
+  font-size:11px;line-height:1;padding:4px 8px;border-radius:999px;
+  border:1px solid var(--line-2);background:var(--bg-2);color:var(--ink-3);
+  white-space:nowrap;
+}
+.p-tag.is-kind{color:var(--ink-2);border-color:var(--line-3)}
+.p-tag.is-muted{color:var(--ink-4);border-style:dashed}
+.p-tag.is-status{background:rgba(123,159,212,.08);border-color:rgba(123,159,212,.24);color:#AFC4D9}
+
+.p-summary{
+  font-size:13.6px;line-height:1.72;color:#DDE2E3;
+  letter-spacing:.004em;word-break:break-word;
+  padding:2px 0 4px;
+}
+.p-summary.is-missing{
+  font-size:12.4px;line-height:1.6;color:var(--ink-4);
+  border-left:2px solid var(--line-2);padding:2px 0 2px 10px;
+}
+
+.p-related{margin-top:4px}
+.p-related h5{margin-bottom:8px}
+.p-rel-card{
+  display:block;width:100%;text-align:left;padding:8px 10px;margin-bottom:6px;
+  border-radius:7px;border:1px solid rgba(123,159,212,.18);
+  background:rgba(123,159,212,.07);
+}
+.p-rel-card:hover{background:rgba(123,159,212,.14);border-color:rgba(123,159,212,.3)}
+.p-rel-title{display:block;font-size:12.2px;line-height:1.55;color:#B7CBDE;word-break:break-word}
+.p-rel-meta{display:block;font-size:10.5px;color:var(--ink-4);margin-top:3px;font-family:var(--mono)}
+
+.p-tech{margin-top:14px;padding-top:10px;border-top:1px solid var(--line)}
+.p-tech-toggle{
+  display:flex;align-items:center;gap:6px;width:100%;
+  font-size:11.5px;color:var(--ink-4);padding:2px 0;
+}
+.p-tech-toggle:hover{color:var(--ink-2)}
+.p-tech-chev{font-style:normal;font-size:10px;transition:transform .12s}
+.p-tech.is-open .p-tech-chev{transform:rotate(90deg)}
+.p-tech-body{display:none;padding-top:8px}
+.p-tech.is-open .p-tech-body{display:block}
+.p-tech-body .p-kv .k{flex:0 0 68px;font-size:11px}
+.p-tech-body .p-kv .v{font-size:11.5px;color:var(--ink-3)}
+
+/* 枢纽：事件卡片列表 */
+.p-cards{display:flex;flex-direction:column;gap:8px;margin:2px 0 4px}
+.p-card{
+  display:block;width:100%;text-align:left;padding:11px 12px;
+  border-radius:9px;border:1px solid var(--line);
+  background:var(--bg-2);
+  transition:background .12s,border-color .12s;
+}
+.p-card:hover{background:var(--bg-3);border-color:var(--line-3)}
+.p-card-title{
+  display:block;font-size:12.8px;line-height:1.55;font-weight:500;color:var(--ink);
+  word-break:break-word;
+}
+.p-card-sum{
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+  overflow:hidden;margin-top:5px;
+  font-size:11.8px;line-height:1.65;color:var(--ink-3);word-break:break-word;
+}
+.p-card-sum.is-missing{color:var(--ink-4)}
+.p-card-foot{
+  display:flex;align-items:center;gap:7px;margin-top:8px;
+  font-size:10.5px;color:var(--ink-4);font-family:var(--mono);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.p-card-sep{opacity:.45;font-size:10px}
+.p-card-status{color:var(--ink-3)}
+.p-card:hover .p-card-status{color:#AFC4D9}
+
+/* ---------- 窄窗 ---------- */
+@media (max-width:1200px){
+  .ws-search{width:150px}
+  .ws-bind{display:none}
+}
+@media (max-width:980px){
+  .ws-ghost{display:none}
+  .ws-main{grid-template-columns:minmax(0,1fr) 0}
+  .ws-panel{
+    position:absolute;right:0;top:calc(var(--ws-head-h) + var(--ws-nav-h));
+    bottom:0;width:min(360px,86vw);z-index:8;
+    border-left:1px solid var(--line-2);
+    box-shadow:-18px 0 40px -24px rgba(0,0,0,.8);
+  }
+  .ws-main[data-panel="off"] .ws-panel{display:none}
+  .ws-main[data-panel="on"] .ws-panel{display:flex}
+}
+@media (max-width:760px){
+  .ws-head{flex-wrap:wrap;height:auto;min-height:var(--ws-head-h);padding:7px 10px;gap:7px}
+  .ws-tools{width:100%;margin-left:0;flex-wrap:nowrap}
+  .ws-search{flex:1 1 auto;width:auto}
+  .ws-div,.ws-ghost{display:none}
+  .ws-hint{display:none}
+}

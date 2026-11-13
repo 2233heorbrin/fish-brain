@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>鱼的脑 · 统一全脑事件星图</title>
+<link rel="stylesheet" href="/api/fish-brain/css/base.css">
+<link rel="stylesheet" href="/api/fish-brain/css/shell.css">
+<link rel="stylesheet" href="/api/fish-brain/css/brain.css">
+</head>
+<body>
+<div class="ws" id="ws">
+  <header class="ws-head">
+    <div class="ws-brand">
+      <b>鱼的脑</b>
+      <span class="ws-ro">只读</span>
+      <span class="ws-bind" id="wsBind">fish-main · 55299</span>
+    </div>
+
+    <div class="ws-tools">
+      <input class="ws-search" id="wsSearch" type="search" placeholder="搜索内容 / 事件" aria-label="搜索节点">
+      <button class="ws-btn" id="wsRegionBtn" type="button" aria-haspopup="true" aria-expanded="false">全部脑区</button>
+      <button class="ws-btn" id="wsTimeBtn" type="button" aria-haspopup="true" aria-expanded="false">全部时间</button>
+      <span class="ws-div"></span>
+      <button class="ws-btn ws-ghost" id="wsReset" type="button">复位视角</button>
+      <button class="ws-btn ws-ghost" id="wsPause" type="button">暂停动画</button>
+      <button class="ws-back" id="wsBack" type="button">返回对话</button>
+    </div>
+  </header>
+
+  <nav class="ws-nav" id="wsNav" role="tablist" aria-label="脑区筛选">
+    <button class="ws-tab is-on" data-region="all" type="button" role="tab" aria-selected="true">全部</button>
+    <button class="ws-tab" data-region="personality" type="button" role="tab" aria-selected="false"><i class="dot"></i>人格</button>
+    <button class="ws-tab" data-region="memory" type="button" role="tab" aria-selected="false"><i class="dot"></i>记忆</button>
+    <button class="ws-tab" data-region="mood" type="button" role="tab" aria-selected="false"><i class="dot"></i>心情</button>
+    <button class="ws-tab" data-region="thinking" type="button" role="tab" aria-selected="false"><i class="dot"></i>思考</button>
+    <button class="ws-tab" data-region="execution" type="button" role="tab" aria-selected="false"><i class="dot"></i>执行</button>
+    <button class="ws-tab" data-region="evidence" type="button" role="tab" aria-selected="false"><i class="dot"></i>证据</button>
+    <span class="ws-count" id="wsCount"></span>
+  </nav>
+
+  <main class="ws-main" id="wsMain" data-panel="off">
+    <section class="ws-stage" id="wsStage">
+      <canvas id="wsCanvas" tabindex="0" aria-label="全脑事件星图，可拖动与缩放"></canvas>
+      <div class="ws-status" id="wsStatus" hidden role="status"></div>
+      <div class="ws-empty" id="wsEmpty" hidden></div>
+      <div class="ws-hint" id="wsHint">滚轮缩放 · 拖动平移 · 点击节点看详情 · 双击复位</div>
+    </section>
+    <aside class="ws-panel" id="wsPanel" aria-live="polite"></aside>
+  </main>
+</div>
+
+<script src="/api/fish-brain/js/event-graph.js"></script>
+<script src="/api/fish-brain/js/views.js"></script>
+<script src="/api/fish-brain/js/app.js"></script>
+</body>
+</html>

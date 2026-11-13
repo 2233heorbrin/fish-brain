@@ -1,0 +1,97 @@
+[
+  {
+    "id": "persona",
+    "name": "@deepseek-ai/dsh-persona",
+    "config": {
+      "prefix": "只有问题依赖鱼的历史、关系或跨平台经历时才调用 fish_memory_search；普通问题不要检索，记忆严格只读。代码、文件、技术调研或工程执行必须使用 worker 委派给全新 standard Worker；任务说明必须自足，只含必要目标、路径、约束和验收标准。不要传递鱼 SELF、主人关系、心情、平台历史、记忆正文或检索结果；必要的技术事实只做最小提炼。不要声称自己执行了 Worker 操作；仅根据 Worker 返回事实汇报，失败时如实说明。"
+    }
+  },
+  {
+    "id": "time-context",
+    "name": "@deepseek-ai/dsh-time-context"
+  },
+  {
+    "id": "dsh-memory-shipei",
+    "name": "file:///D:/deepseek框架/鱼的大脑/适配器/dsh-memory-shipei/lib/index.js",
+    "config": {
+      "selfPath": "D:/deepseek框架/鱼的大脑/人格/generated/desktop/SELF.compat.md",
+      "statePath": "D:/deepseek框架/鱼的大脑/脑区运行状态/人格/personality-layer.json",
+      "includeSelf": true,
+      "includeSubagents": false,
+      "maxBytes": 10240,
+      "doorSign": false
+    }
+  },
+  {
+    "id": "fish-memory-readonly-tools",
+    "name": "file:///D:/deepseek框架/鱼的大脑/适配器/fish-memory-readonly-tools/lib/index.js",
+    "config": {
+      "dataDir": "D:/deepseek框架/鱼的大脑/脑区运行状态/记忆/documents-readonly"
+    }
+  },
+  {
+    "id": "dsh-agent-mood",
+    "name": "file:///D:/deepseek框架/鱼的大脑/适配器/dsh-agent-mood/lib/index.js",
+    "config": {
+      "moodEnabled": true,
+      "stateDir": "D:/deepseek框架/鱼的大脑/脑区运行状态/心情",
+      "order": 132,
+      "decayIntervalMs": 900000,
+      "riskTtlMs": 600000,
+      "includeSubagents": false
+    }
+  },
+  {
+    "id": "dsh-agent-thinking",
+    "name": "file:///D:/deepseek框架/鱼的大脑/适配器/dsh-agent-thinking/lib/index.js",
+    "config": {
+      "thinkingEnabled": true,
+      "parallelWorkersEnabled": false,
+      "stateDir": "D:/deepseek框架/鱼的大脑/脑区运行状态/思考",
+      "runtimeCardPath": "D:/deepseek框架/鱼的大脑/思考/策略/思考运行卡.txt",
+      "capabilityIndexPath": "D:/deepseek框架/鱼的大脑/思考/能力索引.json",
+      "order": 138,
+      "includeSubagents": false,
+      "scopeOnly": true
+    }
+  },
+  {
+    "id": "tool-worker",
+    "name": "@deepseek-ai/dsh-tool-subagent",
+    "config": {
+      "provider": "spawn",
+      "toolName": "worker",
+      "agentPreset": "standard",
+      "maxDepth": 1,
+      "modelSelectionSettings": false
+    }
+  },
+  {
+    "id": "compaction",
+    "name": "cordis:group",
+    "group": true,
+    "isolate": {
+      "compaction": true,
+      "toolResultPruner": true
+    },
+    "config": [
+      {
+        "id": "compaction-basic",
+        "name": "@deepseek-ai/dsh-compaction-basic"
+      },
+      {
+        "id": "command-compact",
+        "name": "@deepseek-ai/dsh-command-compact"
+      },
+      {
+        "id": "tool-result-pruner",
+        "name": "@deepseek-ai/dsh-compaction-tool-result-pruner",
+        "config": {
+          "thresholdChars": 8192,
+          "headChars": 4096,
+          "tailChars": 1024
+        }
+      }
+    ]
+  }
+]
