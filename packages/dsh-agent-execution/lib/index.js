@@ -2,9 +2,14 @@ import { createHash } from 'node:crypto'
 import fs from 'node:fs'
 import { EOL } from 'node:os'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { performance } from 'node:perf_hooks'
 
-import {
+/* superagent 执行内核不随本仓库分发：默认 <repo>/vendor/superagent-engine-adapter，
+   也可用 FISH_SUPERAGENT_ROOT 指向你的安装目录。 */
+const SUPERAGENT_ROOT = (process.env.FISH_SUPERAGENT_ROOT
+  || fileURLToPath(new URL('../../vendor/superagent-engine-adapter', import.meta.url))).replace(/[\\/]+$/, '')
+const {
   AtomicTicketStore,
   buildResultPackage,
   createTickets,
@@ -12,11 +17,11 @@ import {
   runMockWorker,
   validateRuntimeDriver,
   validateWorkerReport,
-} from 'file:///D:/deepseek框架/鱼的胃/脑组件/执行/superagent-engine-adapter/版本/1.0.0-fish.1/src/index.mjs'
+} = await import('file://' + SUPERAGENT_ROOT.replace(/\\/g, '/') + '/src/index.mjs')
 import {
   decideFinalStatus,
   reviewEvidence,
-} from 'file:///D:/deepseek框架/鱼的胃/脑组件/思考/thinking-core/版本/1.0.0-fish.1/src/index.mjs'
+} from '../../thinking-core/src/index.mjs'
 import { DshRuntimeDriverRc2 } from './dsh-runtime-driver-rc2.js'
 import {
   detectResultConflicts,
@@ -29,7 +34,7 @@ export const name = 'dsh-agent-execution'
 export const inject = ['agents', 'sessionController', 'workspaceRegistry', 'tools', 'systemPrompt', 'sessionProjections']
 
 export const CORE = Object.freeze({
-  root: 'D:/deepseek框架/鱼的胃/脑组件/执行/superagent-engine-adapter/版本/1.0.0-fish.1',
+  root: SUPERAGENT_ROOT,
   version: '1.0.0-fish.1',
   sha256: 'A3454A8B566FBBAF4B216E52D638948267AEC8D23884126D2734E2FB2CD1728A',
 })
@@ -39,12 +44,12 @@ export const DEFAULTS = Object.freeze({
   realWorkerEnabled: false,
   parallelWorkersEnabled: false,
   parallelMinOverlapMs: 1000,
-  stateDir: 'D:/deepseek框架/鱼的大脑/脑区运行状态/执行',
+  stateDir: process.env.FISH_EXECUTION_STATE_DIR || 'brain/脑区运行状态/执行',
   includeSubagents: false,
   maximumWorkers: 1,
   dshVersion: '0.2.1-rc.2',
-  nodePath: 'C:/Users/ACER/AppData/Local/Programs/DSH/node/node.exe',
-  dshLlmModulePath: 'file:///C:/Users/ACER/AppData/Roaming/DSH/data/versions/0.2.1-rc.2/node_modules/@deepseek-ai/dsh-llm/lib/index.js',
+  nodePath: process.env.FISH_NODE_PATH || process.execPath,
+  dshLlmModulePath: process.env.FISH_DSH_LLM_MODULE || '',
 })
 
 const FORBIDDEN_STATE_KEYS = /^(?:originalMessage|rawMessage|conversation|fullConversation|personality|moodState|memoryContent|relationshipData|credential|apiKey|token|secret|password|cookie)$/i

@@ -26,8 +26,8 @@ export const name = 'dsh-memory-shipei';
 
 /** 默认值 —— 都可以在 cordis.patch.yml 的 config: 里覆盖。 */
 export const DEFAULTS = {
-  selfPath: 'D:/deepseek框架/鱼的大脑/人格/generated/desktop/SELF.compat.md',
-  statePath: 'D:/deepseek框架/鱼的大脑/脑区运行状态/人格/personality-layer.json',
+  selfPath: process.env.FISH_SELF_PATH || '',
+  statePath: process.env.FISH_PERSONA_STATE || '',
   /** 排在 SUBAGENT_DELEGATION(120) 之后。 */
   order: 130,
   /** 每个回合都注入自我层。设 false 则只注入时钟。 */

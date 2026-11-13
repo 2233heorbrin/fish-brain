@@ -22,7 +22,7 @@ let result = original.slice(0, start) + `- insert:
     - id: fish-brain-lifecycle
       name: "fish-brain-suite/control"
       config:
-        epochPath: "D:/deepseek框架/DSH/profiles/fish-main/fish-brain-lifecycle.json"
+        epochPath: process.env.FISH_LIFECYCLE_EPOCH || "./fish-brain-lifecycle.json"
 ` + original.slice(end)
 for (const id of ['fish-agent-collab-gate', 'fish-engineering-tools-gate']) {
   const from = result.indexOf('- insert:\n    - id: ' + id)

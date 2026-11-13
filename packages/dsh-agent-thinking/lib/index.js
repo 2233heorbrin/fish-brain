@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 import {
   classifyTask, decideFinalStatus, decideUnknownAction, nextRetryState,
@@ -8,19 +9,24 @@ import {
   validateWorkerReport,
 } from '../../thinking-core/src/index.mjs'
 
+const brainPath = (rel) => {
+  const root = (process.env.FISH_BRAIN_ROOT || '').replace(/[\\/]+$/, '')
+  return root ? root + '/' + rel : rel
+}
+
 export const name = 'dsh-agent-thinking'
 export const inject = ['agents']
 export const CORE = Object.freeze({
-  path: 'D:/deepseek框架/鱼的胃/脑组件/思考/thinking-core/版本/1.1.0-fish.1/src/core.mjs',
+  path: fileURLToPath(new URL('../../thinking-core/src/core.mjs', import.meta.url)),
   version: '1.1.0-fish.1',
   sha256: 'AAE3E31512E545D0BAB639192DD61EFF496517D01E130AF4615F192616FE573F',
 })
 export const DEFAULTS = Object.freeze({
   thinkingEnabled: false,
   parallelWorkersEnabled: false,
-  stateDir: 'D:/deepseek框架/鱼的大脑/脑区运行状态/思考',
-  runtimeCardPath: 'D:/deepseek框架/鱼的大脑/思考/策略/思考运行卡.txt',
-  capabilityIndexPath: 'D:/deepseek框架/鱼的大脑/思考/能力索引.json',
+  stateDir: brainPath('脑区运行状态/思考'),
+  runtimeCardPath: brainPath('思考/策略/思考运行卡.txt'),
+  capabilityIndexPath: brainPath('思考/能力索引.json'),
   order: 138,
   includeSubagents: false,
   maximumSeenEvents: 100,

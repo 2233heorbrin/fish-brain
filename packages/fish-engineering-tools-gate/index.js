@@ -24,7 +24,8 @@ const CONTROLLED = Object.freeze([
 
 const CONTROLLED_SET = new Set(CONTROLLED)
 
-const DEFAULT_STATE_PATH = 'D:/deepseek框架/DSH/profiles/fish-main/engineering-tools.json'
+const DEFAULT_STATE_PATH = process.env.FISH_TOOLS_GATE_STATE
+  || (process.env.FISH_PROFILE_DIR ? process.env.FISH_PROFILE_DIR.replace(/[\\/]+$/, '') + '/engineering-tools.json' : 'engineering-tools.json')
 const TARGET_PRESET = 'fish'
 
 const DENY_REASON = '已拒绝：当前 fish Agent 的思考与执行已关闭，不能使用原生工程工具或委派 Worker；可继续对话，或由用户开启此开关。'

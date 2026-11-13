@@ -1,7 +1,11 @@
 import { existsSync, readFileSync, statSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 
-import { createDocumentsMemorySource } from 'file:///D:/deepseek框架/DSH/vendor/mnemon/packages/dsh-mnemon-source-documents/lib/index.js'
+import { fileURLToPath } from 'node:url'
+/* mnemon 是第三方只读记忆库，不随本仓库分发：默认 <repo>/vendor/mnemon，
+   可用环境变量 FISH_MNEMON_ROOT 指向你的 mnemon 安装目录。 */
+const MNEMON_ROOT = (process.env.FISH_MNEMON_ROOT || fileURLToPath(new URL('../../vendor/mnemon', import.meta.url))).replace(/[\\/]+$/, '')
+const { createDocumentsMemorySource } = await import('file://' + MNEMON_ROOT.replace(/\\/g, '/') + '/packages/dsh-mnemon-source-documents/lib/index.js')
 
 export const name = 'fish-memory-readonly-tools'
 export const inject = ['tools']

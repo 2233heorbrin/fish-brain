@@ -23,7 +23,8 @@ export const inject = ['tools', 'connection']
 /** 派发类工具：关闭时一律拒绝执行准入（覆盖并行、串行与单个 Worker）。 */
 const DISPATCH_TOOLS = new Set(['subagent', 'subagent_fork', 'worker'])
 
-const DEFAULT_STATE_PATH = 'D:/deepseek框架/DSH/profiles/fish-main/agent-collab.json'
+const DEFAULT_STATE_PATH = process.env.FISH_COLLAB_STATE
+  || (process.env.FISH_PROFILE_DIR ? process.env.FISH_PROFILE_DIR.replace(/[\\/]+$/, '') + '/agent-collab.json' : 'agent-collab.json')
 
 const DENY_REASON =
   '已拒绝：当前 profile 的「允许创建子 Agent」为关闭状态，不能新建任何子 Agent（包括单个 Worker、并行协作与串行委派）。'

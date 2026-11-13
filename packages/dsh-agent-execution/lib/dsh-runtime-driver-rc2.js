@@ -197,7 +197,7 @@ function workerPrompt(ticket) {
 export class DshRuntimeDriverRc2 {
   constructor(ctx, config = {}) {
     this.ctx = ctx
-    const stateDir = path.resolve(config.stateDir || 'D:/deepseek框架/鱼的大脑/脑区运行状态/执行')
+    const stateDir = path.resolve(config.stateDir || process.env.FISH_EXECUTION_STATE_DIR || 'brain/脑区运行状态/执行')
     this.config = {
       ...config,
       stateDir,

@@ -12,10 +12,10 @@
   },
   {
     "id": "dsh-memory-shipei",
-    "name": "file:///D:/deepseek框架/鱼的大脑/适配器/dsh-memory-shipei/lib/index.js",
+    "name": "dsh-memory-shipei",
     "config": {
-      "selfPath": "D:/deepseek框架/鱼的大脑/人格/generated/desktop/SELF.compat.md",
-      "statePath": "D:/deepseek框架/鱼的大脑/脑区运行状态/人格/personality-layer.json",
+      "selfPath": "<FISH_BRAIN_ROOT>/人格/generated/SELF.compat.md",
+      "statePath": "<FISH_BRAIN_ROOT>/脑区运行状态/人格/personality-layer.json",
       "includeSelf": true,
       "includeSubagents": false,
       "maxBytes": 10240,
@@ -24,17 +24,17 @@
   },
   {
     "id": "fish-memory-readonly-tools",
-    "name": "file:///D:/deepseek框架/鱼的大脑/适配器/fish-memory-readonly-tools/lib/index.js",
+    "name": "fish-memory-readonly-tools",
     "config": {
-      "dataDir": "D:/deepseek框架/鱼的大脑/脑区运行状态/记忆/documents-readonly"
+      "dataDir": "<FISH_BRAIN_ROOT>/脑区运行状态/记忆/documents-readonly"
     }
   },
   {
     "id": "dsh-agent-mood",
-    "name": "file:///D:/deepseek框架/鱼的大脑/适配器/dsh-agent-mood/lib/index.js",
+    "name": "dsh-agent-mood",
     "config": {
       "moodEnabled": true,
-      "stateDir": "D:/deepseek框架/鱼的大脑/脑区运行状态/心情",
+      "stateDir": "<FISH_BRAIN_ROOT>/脑区运行状态/心情",
       "order": 132,
       "decayIntervalMs": 900000,
       "riskTtlMs": 600000,
@@ -43,13 +43,13 @@
   },
   {
     "id": "dsh-agent-thinking",
-    "name": "file:///D:/deepseek框架/鱼的大脑/适配器/dsh-agent-thinking/lib/index.js",
+    "name": "dsh-agent-thinking",
     "config": {
       "thinkingEnabled": true,
       "parallelWorkersEnabled": false,
-      "stateDir": "D:/deepseek框架/鱼的大脑/脑区运行状态/思考",
-      "runtimeCardPath": "D:/deepseek框架/鱼的大脑/思考/策略/思考运行卡.txt",
-      "capabilityIndexPath": "D:/deepseek框架/鱼的大脑/思考/能力索引.json",
+      "stateDir": "<FISH_BRAIN_ROOT>/脑区运行状态/思考",
+      "runtimeCardPath": "<FISH_BRAIN_ROOT>/思考/策略/思考运行卡.txt",
+      "capabilityIndexPath": "<FISH_BRAIN_ROOT>/思考/能力索引.json",
       "order": 138,
       "includeSubagents": false,
       "scopeOnly": true

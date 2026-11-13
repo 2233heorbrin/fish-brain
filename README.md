@@ -24,9 +24,28 @@
 
 ### 先决条件
 
-- DSH ≥ `0.2.1-rc.2`（本仓库在 `0.2.1-rc.5` 上验证）
-- **宿主能力**：`fish-brain-suite/control` 要求 `ctx.agentLoop.releaseExact`（原生 AgentHandle 释放能力）。当前 DSH `0.2.1-rc.5` 已具备；若你的宿主没有该函数，控制器会直接抛 `fish-brain requires native AgentHandle releaseExact support`，此时**不要**装本套件。
+- DSH ≥ `0.2.1-rc.2`（本仓库在作者本机 `0.2.1-rc.5` 上验证）
+- **宿主能力（必须自行确认）**：`fish-brain-suite/control` 要求 `ctx.agentLoop.releaseExact`（原生 AgentHandle 释放能力）。
+  - 作者本机 rc.5 上该接口存在（`dsh-agent-loop` 内可检索到），但**该 rc.5 是否包含本地宿主补丁，官方 npm 包是否具备，作者未做独立核验**；
+  - 若你的宿主没有该函数，控制器会直接抛 `fish-brain requires native AgentHandle releaseExact support`；
+  - 请先在目标宿主上确认该接口存在，再安装本套件。
 - 可选安装「鱼的身体 / 鱼的手」以获得审核安装流程。
+
+### 环境变量（推荐用环境变量配置，不改源码）
+
+| 变量 | 作用 | 缺省 |
+|---|---|---|
+| `FISH_BRAIN_ROOT` | 脑根目录；替换 `fish-plugins.json` 与 UI 配置里的 `<FISH_BRAIN_ROOT>` | 无（占位符保留为空串） |
+| `FISH_PROFILE_DIR` | profile 目录；替换 `<PROFILE_DIR>`，并作为两个 gate 的状态文件位置 | 当前工作目录 |
+| `FISH_MNEMON_ROOT` | 第三方 mnemon 安装目录 | `<repo>/vendor/mnemon` |
+| `FISH_MEMORY_DIR` | 只读记忆数据目录 | `~/.dsh/fish-brain/memory/documents-readonly` |
+| `FISH_SELF_PATH` | `SELF.compat.md`（人格正文，自备） | 空 |
+| `FISH_PERSONA_STATE` | 人格运行状态文件 | 空 |
+| `FISH_COLLAB_STATE` / `FISH_TOOLS_GATE_STATE` | 两道门的状态文件 | `<FISH_PROFILE_DIR>/agent-collab.json`、`…/engineering-tools.json` |
+| `FISH_SUPERAGENT_ROOT` | `dsh-agent-execution` 的执行内核 | `<repo>/vendor/superagent-engine-adapter` |
+| `FISH_EXECUTION_STATE_DIR` | 执行状态目录 | `brain/脑区运行状态/执行` |
+
+> `fish-plugins.json` 里四个脑区插件现在用**包名**引用（`dsh-memory-shipei`、`fish-memory-readonly-tools`、`dsh-agent-mood`、`dsh-agent-thinking`），因此这些包必须先装进同一个 profile；未安装时 suite 会因找不到插件而报错。
 
 ### 方式一：市场子目录规格（推荐）
 
@@ -64,13 +83,7 @@ dsh plugin --profile <profile> add file:<克隆路径>/packages/fish-brain-suite
 | `<FISH_BRAIN_ROOT>` | 你的「鱼的脑」根目录（放 `总说明/`、`脑区运行状态/` 等） |
 | `<PROFILE_DIR>` | 你的 DSH profile 目录（`agent-collab.json`、`engineering-tools.json` 所在处） |
 
-另外三处默认值也在代码里，可用环境变量覆盖：
-
-| 文件 | 配置 |
-|---|---|
-| `packages/fish-agent-collab-gate/index.js` | `statePath`（未给时用 `DEFAULT_STATE_PATH`） |
-| `packages/fish-engineering-tools-gate/index.js` | 同上 |
-| `packages/fish-memory-readonly-tools/lib/index.js` | `FISH_MNEMON_ROOT`（mnemon 安装目录）、`FISH_MEMORY_DIR`（只读记忆数据目录） |
+两处都可以不改 YAML：在启动 DSH 的环境里设置 `FISH_BRAIN_ROOT` / `FISH_PROFILE_DIR`，控制器会在读取 `fish-plugins.json` 时替换占位符（见上一节环境变量表）。
 
 ## 未随仓库提供的部分（重要）
 

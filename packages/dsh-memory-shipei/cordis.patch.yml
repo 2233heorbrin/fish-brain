@@ -6,8 +6,8 @@
     - id: dsh-memory-shipei
       name: 'dsh-memory-shipei'
       config:
-        selfPath: 'D:/deepseek框架/鱼的大脑/人格/generated/desktop/SELF.compat.md'
-        statePath: 'D:/deepseek框架/鱼的大脑/脑区运行状态/人格/personality-layer.json'
+        selfPath: '<FISH_BRAIN_ROOT>/人格/generated/SELF.compat.md'
+        statePath: '<FISH_BRAIN_ROOT>/脑区运行状态/人格/personality-layer.json'
         order: 130
         includeSelf: true
         includeSubagents: false

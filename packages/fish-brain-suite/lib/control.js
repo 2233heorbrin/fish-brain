@@ -23,10 +23,29 @@ export function installAdmissionHooks(ctx, lifecycle) {
   ]
 }
 
+/** 把 fish-plugins.json 里的 <FISH_BRAIN_ROOT> / <PROFILE_DIR> 换成实际路径。 */
+function substitutePlaceholders(value, vars) {
+  if (typeof value === 'string') {
+    return value.split('<FISH_BRAIN_ROOT>').join(vars.brainRoot || '')
+      .split('<PROFILE_DIR>').join(vars.profileDir || '')
+  }
+  if (Array.isArray(value)) return value.map(v => substitutePlaceholders(v, vars))
+  if (value && typeof value === 'object') {
+    const out = {}
+    for (const [k, v] of Object.entries(value)) out[k] = substitutePlaceholders(v, vars)
+    return out
+  }
+  return value
+}
+
 export async function apply(ctx, config) {
   const native = nativeModules(ctx)
   if (typeof ctx.agentLoop.releaseExact !== 'function') throw new Error('fish-brain requires native AgentHandle releaseExact support')
-  const fishPlugins = JSON.parse(readFileSync(config.fishPluginsPath || new URL('../fish-plugins.json', import.meta.url), 'utf8'))
+  const rawFishPlugins = JSON.parse(readFileSync(config.fishPluginsPath || new URL('../fish-plugins.json', import.meta.url), 'utf8'))
+  const fishPlugins = substitutePlaceholders(rawFishPlugins, {
+    brainRoot: config.brainRoot || process.env.FISH_BRAIN_ROOT || '',
+    profileDir: config.profileDir || process.env.FISH_PROFILE_DIR || '',
+  })
   const lifecycle = new BrainLifecycle(ctx, { ...config, fishPlugins }, native)
   ctx.provide('fishBrainLifecycle', lifecycle)
   installAdmissionHooks(ctx, lifecycle)

@@ -12,7 +12,10 @@ import apply, {
   buildEventProjection, mergeEventNode, eventProjectionDigest, diffEventProjection
 } from '../lib/index.js'
 
-const root = 'D:/deepseek框架/鱼的大脑/适配器/fish-brain-ui'
+/* 依赖真实宿主与本机目录的集成用例：设置 FISH_BRAIN_INTEGRATION=1 才运行。 */
+const INTEGRATION = process.env.FISH_BRAIN_INTEGRATION === '1'
+if (!INTEGRATION) { test = (name, fn) => import('node:test').then(t => t.test.skip(name, fn)); }
+const root = (process.env.FISH_BRAIN_UI_ROOT || process.cwd())
 const config = {
   freezeMatrixPath: 'D:/deepseek框架/鱼的大脑/总说明/全脑V1冻结矩阵.json',
   brainRoot: 'D:/deepseek框架/鱼的大脑'

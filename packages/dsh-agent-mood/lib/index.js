@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto'
 import fs from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 
 import {
@@ -13,10 +14,15 @@ import {
   summarizeState,
 } from '../../dsh-mood-core/src/core.mjs'
 
+const brainPath = (rel) => {
+  const root = (process.env.FISH_BRAIN_ROOT || '').replace(/[\\/]+$/, '')
+  return root ? root + '/' + rel : rel
+}
+
 export const name = 'dsh-agent-mood'
 
 export const CORE = Object.freeze({
-  path: 'D:/deepseek框架/鱼的胃/脑组件/心情/dsh-mood/版本/0.14.17-fish.1/src/core.mjs',
+  path: fileURLToPath(new URL('../../dsh-mood-core/src/core.mjs', import.meta.url)),
   version: '0.14.17-fish.1',
   upstreamVersion: UPSTREAM.packageVersion,
   upstreamCommit: UPSTREAM.commit,
@@ -25,7 +31,7 @@ export const CORE = Object.freeze({
 
 export const DEFAULTS = Object.freeze({
   moodEnabled: false,
-  stateDir: 'D:/deepseek框架/鱼的大脑/脑区运行状态/心情',
+  stateDir: brainPath('脑区运行状态/心情'),
   order: 132,
   decayIntervalMs: 15 * 60 * 1000,
   riskTtlMs: 10 * 60 * 1000,
