@@ -4,111 +4,104 @@
 >
 > A "whole brain" bundle for DSH: persona (SELF), read-only memory recall, mood and thinking strategy cards injected into an agent's context, plus two gates controlling collaboration and engineering tools.
 
-本仓库是一个 **monorepo**，包含四个可独立安装的 DSH 插件包：
+本仓库是一个 **monorepo**，包含 11 个包：
 
-| 包 | 作用 | 形态 |
+| 包 | 作用 | 角色 |
 |---|---|---|
-| `fish-brain-suite` | 组合层：持有 `fish-plugins.json`（全脑清单）、控制接口 `./control`、生命周期与原生宿主适配 | bundle 补丁 + 宿主控制器 |
-| `fish-brain-ui` | 设置页「脑」面板：脑区投影、事件图、记忆摘要、过滤/搜索 | 宿主接口 + 客户端 UI |
-| `fish-agent-collab-gate` | 多 Agent 协作开关：关闭时用 `tools.guard` 拒绝 `subagent` / `subagent_fork` 的准入，worker 与普通工具不受影响 | 宿主工具门 |
-| `fish-engineering-tools-gate` | 工程工具门：只对指定 agent 隐藏并拦截原生工程工具（bash/文件写入等），开启时恢复 | 宿主工具门 |
-
-## 它解决什么问题
-
-普通 agent 只有「系统提示 + 工具 + 会话历史」。`fish-brain` 补上四层**受控的长期状态**，并保证每条都**只读或可关**：
-
-1. **人格（SELF）**：把 `SELF.compat.md` 注入为 persona 前缀——角色、关系、语气来自文件，不写死在提示里。
-2. **只读记忆**：`fish-memory-readonly-tools` 提供 `fish_memory_search`，只读检索，禁止写入。
-3. **心情**：`dsh-agent-mood` 记录心情状态并做衰减，注入为极短的上下文。
-4. **思考**：`dsh-agent-thinking` 把「思考运行卡 / 能力索引」作为策略提示注入，`scopeOnly` 限定作用域。
-
-再加两道门：
-
-- **协作门**：批量并行 subagent 很容易失控；协作门默认关闭，需要时由用户打开。
-- **工程工具门**：让「思考型 agent」在没有授权时看不到工程写工具，从工具层面保证它只能想、不能改。
-
-> 设计原则：**事实与结论分离**。注入的永远是「事实卡/策略卡」，结论必须由 agent 自己给出；记忆**严格只读**；任何开关都不能被 agent 自行打开。
+| `fish-brain-suite` | 组合层：持有 `fish-plugins.json`（全脑清单）、控制接口 `./control`、生命周期 | 必需 |
+| `fish-brain-ui` | 设置页「脑」面板：脑区投影、事件图、记忆摘要、过滤/搜索 | 推荐 |
+| `dsh-agent-thinking` | 思考：策略卡 / 能力索引注入（`thinking-core` 为内核） | 推荐 |
+| `thinking-core` | 思考内核（策略卡解析、作用域、状态读写） | 内核 |
+| `dsh-agent-mood` | 心情：状态机 + 衰减 + 极短注入（`dsh-mood-core` 为内核） | 可选 |
+| `dsh-mood-core` | 心情内核 | 内核 |
+| `dsh-memory-shipei` | 人格（SELF）：把 `SELF.compat.md` 作为 persona 前缀注入 | 可选 |
+| `fish-memory-readonly-tools` | 只读记忆：`fish_memory_search`（依赖第三方 `mnemon`，**不随仓库分发**） | 可选 |
+| `dsh-agent-execution` | 执行：受限 Worker 运行时驱动（只在明确需要时启用） | 可选 |
+| `fish-agent-collab-gate` | 协作门：关闭时拒绝 `subagent` / `subagent_fork` / `worker` 的执行准入 | 可选 |
+| `fish-engineering-tools-gate` | 工程工具门：只对指定 agent 隐藏并拦截原生工程写工具 | 可选 |
 
 ## 安装
 
 ### 先决条件
 
 - DSH ≥ `0.2.1-rc.2`（本仓库在 `0.2.1-rc.5` 上验证）
-- 推荐同时安装「鱼的身体 / 鱼的手」以启用审核安装流程（可选）
+- **宿主能力**：`fish-brain-suite/control` 要求 `ctx.agentLoop.releaseExact`（原生 AgentHandle 释放能力）。当前 DSH `0.2.1-rc.5` 已具备；若你的宿主没有该函数，控制器会直接抛 `fish-brain requires native AgentHandle releaseExact support`，此时**不要**装本套件。
+- 可选安装「鱼的身体 / 鱼的手」以获得审核安装流程。
 
-### 逐个安装（推荐：由市场安装）
-
-本仓库是 monorepo，DSH 的插件市场支持**子目录规格**（`…/tree/<branch>/<subdir>`）：
+### 方式一：市场子目录规格（推荐）
 
 ```
 github:2233heorbrin/fish-brain/tree/main/packages/fish-brain-suite
 github:2233heorbrin/fish-brain/tree/main/packages/fish-brain-ui
+github:2233heorbrin/fish-brain/tree/main/packages/dsh-agent-thinking
+github:2233heorbrin/fish-brain/tree/main/packages/thinking-core
+github:2233heorbrin/fish-brain/tree/main/packages/dsh-agent-mood
+github:2233heorbrin/fish-brain/tree/main/packages/dsh-mood-core
+github:2233heorbrin/fish-brain/tree/main/packages/dsh-memory-shipei
+github:2233heorbrin/fish-brain/tree/main/packages/fish-memory-readonly-tools
+github:2233heorbrin/fish-brain/tree/main/packages/dsh-agent-execution
 github:2233heorbrin/fish-brain/tree/main/packages/fish-agent-collab-gate
 github:2233heorbrin/fish-brain/tree/main/packages/fish-engineering-tools-gate
 ```
 
-在市场里粘贴上面的规格即可安装；四个包顺序不影响（`fish-brain-ui` 与两个 gate 需要 profile 里有入口行）。
-
-### 或者：克隆后按本地路径安装
+### 方式二：克隆后按本地路径安装
 
 ```bash
 git clone https://github.com/2233heorbrin/fish-brain.git
+cd fish-brain
 dsh plugin --profile <profile> add file:<克隆路径>/packages/fish-brain-suite
-dsh plugin --profile <profile> add file:<克隆路径>/packages/fish-brain-ui
-dsh plugin --profile <profile> add file:<克隆路径>/packages/fish-agent-collab-gate
-dsh plugin --profile <profile> add file:<克隆路径>/packages/fish-engineering-tools-gate
+# 其余按上表按需安装
 ```
 
-> ⚠️ 如果你用的是带审核流程的「鱼手」安装器：它目前**只接受仓库根目录有 `package.json`** 的来源（monorepo 子目录会报 `SOURCE_PACKAGE_JSON_MISSING`）。此时请用市场/原生安装，或把单个包拆成独立仓库。
+> ⚠️ 带审核流程的「鱼手」安装器目前只接受**仓库根目录有 `package.json`** 的来源；monorepo 子目录会报 `SOURCE_PACKAGE_JSON_MISSING`。请用市场/原生安装，或把单个包拆成独立仓库。
 
-### 装完必须改的本地路径
+## 装完必须改的本地路径
 
-本仓库默认路径指向作者自己的工作区，请按你的目录改这 4 处（否则 UI/门会读不到状态）：
+`fish-brain-suite/cordis.patch.yml` 里用两个占位符（**改配置，不改源代码**）：
 
-| 文件 | 位置 | 改成 |
+| 占位符 | 换成 |
+|---|---|
+| `<FISH_BRAIN_ROOT>` | 你的「鱼的脑」根目录（放 `总说明/`、`脑区运行状态/` 等） |
+| `<PROFILE_DIR>` | 你的 DSH profile 目录（`agent-collab.json`、`engineering-tools.json` 所在处） |
+
+另外三处默认值也在代码里，可用环境变量覆盖：
+
+| 文件 | 配置 |
+|---|---|
+| `packages/fish-agent-collab-gate/index.js` | `statePath`（未给时用 `DEFAULT_STATE_PATH`） |
+| `packages/fish-engineering-tools-gate/index.js` | 同上 |
+| `packages/fish-memory-readonly-tools/lib/index.js` | `FISH_MNEMON_ROOT`（mnemon 安装目录）、`FISH_MEMORY_DIR`（只读记忆数据目录） |
+
+## 未随仓库提供的部分（重要）
+
+| 依赖 | 状态 | 说明 |
 |---|---|---|
-| `packages/fish-brain-suite/cordis.patch.yml` | `freezeMatrixPath` / `brainRoot` / 两个 `statePath` | 你的「鱼的大脑」目录与 profile 目录 |
-| `packages/fish-brain-suite/fish-plugins.json` | `file:///…/dsh-memory-shipei`、`selfPath`、`fish-memory-readonly-tools` 等 | 你的适配器绝对路径 |
-| `packages/fish-agent-collab-gate/index.js` | `DEFAULT_STATE_PATH` | 你的 `agent-collab.json` |
-| `packages/fish-engineering-tools-gate/index.js` | `DEFAULT_STATE_PATH` | 你的 `engineering-tools.json` |
+| `mnemon`（第三方只读记忆库） | **不随仓库分发** | `fish-memory-readonly-tools` 默认从 `../../vendor/mnemon` 解析，或用 `FISH_MNEMON_ROOT` 指定；不装则 `fish_memory_search` 不可用，其余脑区不受影响 |
+| `SELF.compat.md`（人格正文） | **刻意不提供** | 这是使用者自己的内容；`dsh-memory-shipei` 只负责把它注入，仓库只给结构约定，不放任何人的正文 |
+| `思考运行卡.txt` / 能力索引 | **需自行准备** | 同上，`dsh-agent-thinking` 读的是你的策略卡文件 |
+| 冻结矩阵 `全脑V1冻结矩阵.json` | **需自行准备** | `fish-brain-ui` 用它做投影过滤，缺省时面板降级 |
 
-配色/文案在 `packages/fish-brain-ui/assets/`，可自由改。
+## 已知限制
 
-## 配置（`fish-plugins.json`）
+1. **`worker` 也会被协作门拦截**：`fish-agent-collab-gate` 的 `DISPATCH_TOOLS = ['subagent','subagent_fork','worker']`。早期文档写「worker 不受影响」，**与实现不符，已按实现更正**（`worker` 是 fish 预设的委派通道，属于派发入口）。
+2. **开启 `fish-agent-collab-gate` 后**，当前 agent 不能创建任何子 Agent（包括单个 Worker）；要恢复请在设置/插件页关掉该门，或把会话切到不带该门的预设。
+3. **`dsh-agent-execution` 默认不应常开**：它给 Worker 提供受限文件工具与固定 `node --test`，只在需要「执行型 Worker」时启用。
+4. **测试分两类**：`node --test packages/*/test/*.mjs` 默认只跑不需要真实宿主的用例；涉及真实 profile / 本机目录的集成用例需设置 `FISH_BRAIN_INTEGRATION=1`、`FISH_BRAIN_PROFILE=<profile 目录>`、`FISH_BRAIN_ROOT=<脑根目录>` 才会运行。
 
-`fish-brain-suite` 的「全脑清单」是一串 Cordis 插件项，可增删：
+## 安全边界
 
-```jsonc
-[
-  { "id": "persona", "name": "@deepseek-ai/dsh-persona",
-    "config": { "prefix": "……" } },                    // 人格前缀
-  { "id": "dsh-memory-shipei", "name": "file:///…/dsh-memory-shipei/lib/index.js",
-    "config": { "selfPath": "…/SELF.compat.md", "includeSelf": true } },
-  { "id": "fish-memory-readonly-tools", "name": "file:///…" },  // 只读记忆
-  { "id": "dsh-agent-mood", "name": "file:///…" },              // 心情
-  { "id": "dsh-agent-thinking", "name": "file:///…", "config": { "runtimeCardPath": "…/思考运行卡.txt" } },
-  { "id": "tool-worker", "name": "@deepseek-ai/dsh-tool-subagent", "config": { "toolName": "worker" } }
-]
-```
+- 记忆**只读**：仓库内没有写入记忆的代码路径。
+- 注入内容**来自使用者自己的文件**：本仓库不含任何人的 SELF 正文、关系、记忆或会话记录。
+- 开关**只能人来按**：两个门与生命周期开关都在设置/插件页，agent 无权自行开启。
+- **不碰凭据**：仓库内没有 token / 密钥读取逻辑。
 
 ## 开发与测试
 
 ```bash
-# 组合层
 node --test packages/fish-brain-suite/test/*.test.mjs
-
-# UI
 node --test packages/fish-brain-ui/test/*.test.mjs
+node --test packages/dsh-agent-*/test/*.test.mjs
 ```
-
-测试使用本地 fixture，不联网、不写你的真实状态目录。
-
-## 安全边界
-
-- 记忆**只读**：任何写记忆的动作不在本仓库范围内。
-- 开关**只能人来按**：两个门与脑区开关都由用户在插件/设置页操作，agent 无权自行开启。
-- 注入内容**可审计**：所有注入都来自显式文件（`SELF.compat.md`、`思考运行卡.txt`、心情/记忆状态文件），可在仓库里核对模板。
-- 不碰凭据：本仓库不读、不存 token/密钥。
 
 ## 许可
 

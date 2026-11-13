@@ -1,0 +1,6 @@
+# fish-main candidate bundle. The adapter default supplies the isolated state path.
+- insert:
+    - id: dsh-agent-mood
+      name: dsh-agent-mood
+      config:
+        enabled: false

@@ -1,0 +1,15 @@
+# dsh bundle patch: 把本插件插进 profile 的层栈。
+#
+# `name` 必须与包名一致，加载器才认得 profile 的 node_modules 里的它。
+# 要改默认值就在下面加 config:（全部可选项见 lib/index.js 的 DEFAULTS）。
+- insert:
+    - id: dsh-memory-shipei
+      name: 'dsh-memory-shipei'
+      config:
+        selfPath: 'D:/deepseek框架/鱼的大脑/人格/generated/desktop/SELF.compat.md'
+        statePath: 'D:/deepseek框架/鱼的大脑/脑区运行状态/人格/personality-layer.json'
+        order: 130
+        includeSelf: true
+        includeSubagents: false
+        maxBytes: 10240
+        doorSign: false

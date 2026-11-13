@@ -1,0 +1,21 @@
+{
+  "name": "dsh-mood-core",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "心情内核：状态机 + 衰减 + 注入片段（供 dsh-agent-mood 使用）",
+  "main": "src/index.mjs",
+  "exports": {
+    ".": "./src/index.mjs"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/2233heorbrin/fish-brain.git"
+  },
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness",
+    "dsh"
+  ]
+}

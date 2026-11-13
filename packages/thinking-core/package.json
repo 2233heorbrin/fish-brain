@@ -1,0 +1,21 @@
+{
+  "name": "thinking-core",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "思考内核：策略卡 / 能力索引 / 作用域（供 dsh-agent-thinking 使用）",
+  "main": "src/index.mjs",
+  "exports": {
+    ".": "./src/index.mjs"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/2233heorbrin/fish-brain.git"
+  },
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness",
+    "dsh"
+  ]
+}

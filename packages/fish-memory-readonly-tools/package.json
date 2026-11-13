@@ -1,0 +1,25 @@
+{
+  "name": "fish-memory-readonly-tools",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib"
+  ],
+  "private": true,
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/2233heorbrin/fish-brain.git"
+  },
+  "homepage": "https://github.com/2233heorbrin/fish-brain",
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness",
+    "dsh"
+  ]
+}

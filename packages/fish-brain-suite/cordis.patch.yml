@@ -1,17 +1,28 @@
+# fish-brain 组合层：一次性注册「生命周期控制器 + 三个脑区/门插件」。
+#
+# 生命周期控制器（fish-brain-lifecycle）必须先于 suite 就绪：
+# suite 的 static inject 里声明了 'fishBrainLifecycle'，没有提供者时无法挂载。
+#
+# 下面 <FISH_BRAIN_ROOT> 与 <PROFILE_DIR> 是本机路径占位符，安装后按你的目录替换
+# （改配置即可，不需要改源代码）。见仓库根 README「装完必须改的本地路径」。
 - insert:
+    - id: fish-brain-lifecycle
+      name: "fish-brain-suite/control"
+      config:
+        epochPath: "<FISH_BRAIN_ROOT>/脑区运行状态/生命周期/epoch.json"
     - id: fish-brain-suite
       name: "fish-brain-suite"
       config:
         - id: fish-brain-ui
           name: "fish-brain-ui"
           config:
-            freezeMatrixPath: "D:/deepseek框架/鱼的大脑/总说明/全脑V1冻结矩阵.json"
-            brainRoot: "D:/deepseek框架/鱼的大脑"
+            freezeMatrixPath: "<FISH_BRAIN_ROOT>/总说明/全脑V1冻结矩阵.json"
+            brainRoot: "<FISH_BRAIN_ROOT>"
         - id: fish-agent-collab-gate
           name: "fish-agent-collab-gate"
           config:
-            statePath: "D:/deepseek框架/DSH/profiles/fish-main/agent-collab.json"
+            statePath: "<PROFILE_DIR>/agent-collab.json"
         - id: fish-engineering-tools-gate
           name: "fish-engineering-tools-gate"
           config:
-            statePath: "D:/deepseek框架/DSH/profiles/fish-main/engineering-tools.json"
+            statePath: "<PROFILE_DIR>/engineering-tools.json"
