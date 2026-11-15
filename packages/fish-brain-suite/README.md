@@ -8,6 +8,10 @@ DSH 原生父插件。原生 bundle 选择是唯一启停依据；不提供第�
 
 不提供五脑区单独开关。页面内也不提供启停或写入入口。
 
+Suite 声明与 Group 运行选项深度分离。共享 EntryTree 上的同 ID 后继只在旧 Suite 完成释放后创建；活跃占用明确失败。清理按确切 Group/Entry/Fiber 归属，不删除其他代的条目。失败释放保留在该 EntryTree 的内存所有权中并传播给后继，不把它当作空闲资源；它不写额外状态文件。原生必需子项被配置为停用时仍明确失败，不强制启用。
+
+生命周期回归使用 `FISH_DSH_TEST_ANCHOR` 指向隔离 rc.5 的安装锚点；设置 `FISH_TEST_INSTALL_ROOT` 时加载其 `node_modules/fish-brain` 内的实际产物。运行 `node --test packages/fish-brain-suite/test/suite-reload.test.mjs`，不访问日常 Profile 或调用模型。
+
 `fish-brain-suite/control` 常驻的只有状态投影、原生预设注册和会话边界，始终不装载鱼脑提示词、记忆或 Worker。`GET/HEAD /api/fish-brain-lifecycle/state` 显示实际状态；只有取消、释放、预设退休及 Group 子组件释放都成功，`fullyDisabled` 才为 true。释放失败为 fault，不以原生开关颜色代替结果。
 
 启停前后原生会话日志保持；跨 epoch 的 fish 历史只供查看，继续输入会明确要求原生新会话。epoch 文件只记录已观察的原生套件状态和会话代际，不接受启停命令。不删除日志、文件、状态或记忆，不复制旧消息/压缩摘要到新会话。
