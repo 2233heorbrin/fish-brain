@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs'
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { pathToFileURL } from 'node:url'
@@ -12,6 +12,15 @@ const { ProfileData, conversationWorkspace, mountProfileData } = await import(pa
 const temp = mkdtempSync(join(tmpdir(), 'fish-data-test-'))
 const directory = name => { const path = join(temp, name); mkdirSync(path, { recursive: true }); return path }
 const data = (name, component = 'brain', options) => new ProfileData(directory(name), component, options)
+
+test('every bundled component includes its declared native bundle patch', () => {
+  for (const name of readdirSync(join(root, 'packages'))) {
+    const directory = join(root, 'packages', name)
+    const manifest = JSON.parse(readFileSync(join(directory, 'package.json'), 'utf8'))
+    if (manifest.dsh?.bundle?.patch)
+      assert(existsSync(join(directory, manifest.dsh.bundle.patch)), name + ': declared bundle patch missing from installed package')
+  }
+})
 
 test('no workspace stays pending and never uses cwd', () => {
   const value = data('pending'); assert.equal(value.initialize().status, 'pending-workspace')
