@@ -1,16 +1,22 @@
 # fish-brain（鱼的脑）
 
-> 当前任务分支实现运行与数据绑定解耦，尚未发布或部署。整个鱼脑仍为一个插件；双方不要求另一方存在、开启或先完成初始化。同宿主退出仍影响双方，不提供进程隔离。胃分析及显式原包选择机制属于后续工作块，本分支不宣称已经实现。
+> 0.0.3 提供独立数据绑定及 Suite 生命周期修复。整个鱼脑仍为一个插件；脑与身体不要求另一方存在、开启或先完成初始化。同宿主退出仍影响双方，不提供进程隔离。胃分析与安装决定由独立的 fish-body 管理，不属于鱼脑功能。
 
-本轮开发版将人格、只读记忆、心情、思考、执行内核和控制模块打进一个 DSH bundle，不再要求手动安装十几个内部包。
+本包将人格、只读记忆、心情、思考、执行内核和控制模块打进一个 DSH bundle，不再要求手动安装十几个内部包。
 
-**官方原版仍受宿主接口阻塞，配套扩展为隔离验证原型。** 根入口检测实际 `agentLoop.releaseExact(agent)` 能力：官方 rc.5 显示 `FISH_EXACT_AGENT_RELEASE_UNAVAILABLE`；具备本轮明确标记的宿主扩展时，挂载现有生命周期、fish Preset、脑区与可逆控制门。插件不会自动修改宿主。
+**完整运行要求独立维护的宿主扩展。** 根入口检测实际 `agentLoop.releaseExact(agent)` 能力：官方 rc.5 显示 `FISH_EXACT_AGENT_RELEASE_UNAVAILABLE`；具备指定扩展时，挂载生命周期、fish Preset、脑区与可逆控制门。插件不会自动修改宿主。
 
 ## 安装入口与运行要求
 
-需要 DSH 和 Node `>=22.14`。目前仅对官方 DSH `0.2.1-rc.5` 的下述能力做过隔离验证，不声称支持其他版本或完整启停。
+需要 Node `>=22.14`。已验证 Windows、DSH `0.2.1-rc.5` 及指定扩展环境；官方原版的阻塞行为单独验证，其他宿主版本、macOS 和 Linux 未验证。
 
-当前版本为 `0.0.2`。可使用 GitHub 根仓库入口；开发者也可在仓库根目录执行 `npm pack --ignore-scripts` 得到 `fish-brain-0.0.2.tgz`，通过 DSH 原生插件管理提交 `file:<绝对 tgz 路径>`。启停仍由原生插件选择控制。已验证的完整功能需要下文说明的配套宿主扩展，普通官方 rc.5 安装不会自动获得该扩展。
+当前版本为 `0.0.3`，通过 [2233heorbrin/fish-brain](https://github.com/2233heorbrin/fish-brain) 的 main 与 annotated tag `v0.0.3` 交付。固定安装来源：
+
+```text
+github:2233heorbrin/fish-brain#v0.0.3
+```
+
+将此来源交给 DSH 原生插件管理。开发者也可执行 `npm pack --ignore-scripts` 得到 `fish-brain-0.0.3.tgz`，提交 `file:<绝对 tgz 路径>`。启停仍由原生插件选择控制。安装前必须确认下述扩展要求；这不是官方原版 rc.5 的全功能即装即用版本。未创建 GitHub Release，未发布 registry。
 
 无需设置作者路径或 vendor 环境变量，也无需单独安装 `packages/` 下的内核。
 
@@ -51,7 +57,17 @@
 
 官方 `dsh-agent-loop@0.2.1-rc.5` 的 create/resume 返回带 dispose 的 handle，但会话控制器创建 Agent 后没有公开该 handle 的精确释放入口。现有 Agent.cancel/idle、subagents.drainDescendants 无法代替完整释放。
 
-本轮隔离扩展 `releaseExact(agent)` 复用创建时保存的原生 handle，核对确切对象后等待原生 dispose；不改写 AgentFactory、AgentLoop 轮次实现或会话存储。这不是官方原有 API，未应用到生产。完整补丁、官方/扩展对照与运行证据见隔离验收报告。
+指定扩展 `releaseExact(agent)` 复用创建时保存的原生 handle，核对确切对象后等待原生 dispose；不改写 AgentFactory、AgentLoop 轮次实现或会话存储。这不是官方原有 API。
+
+### 扩展交付限制
+
+本仓库及安装包不分发或自动应用宿主补丁；目前没有公开、可直接下载的配套补丁发行物。因此完整运行仅支持已经由环境维护者部署并核验这些能力的指定 rc.5 环境，不能只安装本包就获得完整运行。其他用户应先向其环境维护者取得与实际宿主基线匹配、包含来源、许可证、应用和恢复说明的独立扩展；没有这些材料时应停在接口缺失状态，不绕过检查。这里不提供虚构下载地址或把本机路径作为公共安装步骤。
+
+鱼脑要求 `agentLoop.releaseExact`；fish-body 的两阶段安装决定另要求 manager v2。若市场把 `dsh.client` 的资源占位误当服务端加载，还需市场 client-only 唯一挂载兼容修复。这三项分别维护，不互相替代，也不会随插件包静默安装。
+
+### 验证范围
+
+公开根包已在合成数据的隔离扩展环境验证 GitHub 首次安装、旧版更新、真实 Loader、原生重载、独立绑定及启停；最终布局适配也有实际产物回归。日常使用的是保留私有 composition 和 desktop SELF 布局的 Suite 适配器：用户确认了它与身体分支的独立开关、页面及目录按钮。这份日常试用不代表公开根包已替换日常私有鱼脑。实际用户数据不会随源码或包交付；未调用真实模型验证质量。
 
 ## 开发验证
 

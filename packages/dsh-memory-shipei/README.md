@@ -85,8 +85,8 @@ dsh plugin --profile <name> add <path-to-this-package>
 - id: dsh-memory-shipei
   name: 'dsh-memory-shipei'
   config:
-    selfPath:  'D:/deepseek框架/鱼的大脑/人格/generated/desktop/SELF.compat.md'
-    statePath: 'D:/deepseek框架/鱼的大脑/脑区运行状态/人格/personality-layer.json'
+    selfPath:  '<绝对脑目录>/人格/generated/SELF.compat.md'
+    statePath: '<绝对脑目录>/脑区运行状态/人格/personality-layer.json'
 ```
 
 **默认值是占位符，必须改成你自己的路径。**

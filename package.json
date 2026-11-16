@@ -1,7 +1,7 @@
 {
   "name": "fish-brain",
   "private": false,
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "鱼的脑：DSH 上的全脑组合（人格 / 只读记忆 / 心情 / 思考 / 协作门 / 工程工具门）",
   "license": "MIT",
   "type": "module",

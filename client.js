@@ -442,7 +442,7 @@ function installDataClient(React, ctx, component) {
       }, [
         React.createElement('div', { key: 'head', style: { display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' } }, [
           React.createElement('h2', { key: 't', style: { margin: 0, fontSize: '16px', fontWeight: 500 } }, '鱼的脑'),
-          React.createElement('span', { key: 'v', style: { fontSize: '11px', color: dark ? '#AEB5BB' : '#5A6670', fontFamily: 'monospace' } }, 'v0.0.2')
+          React.createElement('span', { key: 'v', style: { fontSize: '11px', color: dark ? '#AEB5BB' : '#5A6670', fontFamily: 'monospace' } }, 'v0.0.3')
         ]),
         React.createElement('p', { key: 'sub', style: { margin: '0 0 18px', fontSize: '12px', color: dark ? '#AEB5BB' : '#5A6670' } },
           '统一全脑事件星图 · 只读投影'),
