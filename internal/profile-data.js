@@ -57,23 +57,19 @@ export class ProfileData {
       const valid = directory(value.root)
       const state = { status: valid ? (value.components.includes(this.component) ? 'ready' : 'pending-initialization') : 'invalid-root',
         root: value.root, paths: this.paths(value.root), profileDir: this.profileDir }
-      if (valid && this.component === 'brain') {
-        const self = join(state.paths.人格, 'generated', 'SELF.compat.md')
-        state.personality = existsSync(self) && readFileSync(self, 'utf8').trim() ? 'filled' : 'empty-template'
-        const index = join(state.paths.脑区运行状态, '记忆', 'documents-readonly', 'documents', 'index.json')
-        state.memory = existsSync(index) ? { count: read(index).documents.length } : { count: 0 }
-      }
+      if (valid && this.component === 'brain') Object.assign(state, this.inspectBrain(state.paths))
       return state
     } catch (error) { return { status: 'invalid-config', root: null, paths: {}, profileDir: this.profileDir, error: error.message } }
   }
-  initialize({ root, switchRoot = false } = {}) {
-    let previous
-    try { previous = this.binding() } catch (error) { if (!switchRoot) throw error }
-    if (previous && !switchRoot) root = previous.root
-    if (!root) return this.state()
-    if (!isAbsolute(root) || !directory(root)) throw new Error('FISH_ROOT_INVALID: 请选择已存在的绝对目录；旧路径不会自动替换')
-    root = resolve(root)
-    const paths = this.paths(root)
+  // Local adapters can retain their existing layout without duplicating binding
+  // selection/publication or first generating the public package's templates.
+  inspectBrain(paths) {
+    const self = join(paths.人格, 'generated', 'SELF.compat.md')
+    const index = join(paths.脑区运行状态, '记忆', 'documents-readonly', 'documents', 'index.json')
+    return { personality: existsSync(self) && readFileSync(self, 'utf8').trim() ? 'filled' : 'empty-template',
+      memory: existsSync(index) ? { count: read(index).documents.length } : { count: 0 } }
+  }
+  initializeStructures(paths) {
     for (const path of Object.values(paths)) mkdirSync(path, { recursive: true })
     if (this.component === 'brain') {
       // Empty content is deliberate. Instructions live outside the injected SELF.
@@ -89,6 +85,15 @@ export class ProfileData {
       for (const dir of ['插件仓', '插件注册表/requests', '插件注册表/decisions', '运行数据', '审计日志']) mkdirSync(join(paths.hand, dir), { recursive: true })
       writeOnce(join(paths.hand, '插件注册表', 'registry.json'), json({ schema: 'fish-hand-plugin-registry/v1', plugins: [] }))
     }
+  }
+  initialize({ root, switchRoot = false } = {}) {
+    let previous
+    try { previous = this.binding() } catch (error) { if (!switchRoot) throw error }
+    if (previous && !switchRoot) root = previous.root
+    if (!root) return this.state()
+    if (!isAbsolute(root) || !directory(root)) throw new Error('FISH_ROOT_INVALID: 请选择已存在的绝对目录；旧路径不会自动替换')
+    root = resolve(root)
+    this.initializeStructures(this.paths(root))
     const binding = { schema: 'fish-profile-data/v1', root,
       components: [this.component],
       origin: previous?.root === root ? previous.origin : switchRoot ? 'manual' : 'conversation-workspace' }

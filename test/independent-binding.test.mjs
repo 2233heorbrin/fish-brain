@@ -62,3 +62,23 @@ test('invalid binding keeps data routes available for error detail and explicit 
  const fetch=async(body)=>(await routes.get('/api/fish-brain/data').fetch(new Request('http://local/api/fish-brain/data',body?{method:'POST',body:JSON.stringify(body)}:{}))).json()
  assert.equal((await fetch()).status,'invalid-config');assert.equal((await fetch({action:'select',path:root})).status,'ready')
 })
+
+test('existing adapter layout uses the same explicit binding without generating public templates',()=>{
+ class ExistingBrain extends ProfileData {
+  initializeStructures(paths) { assert(fs.existsSync(join(paths.人格,'existing-self.md'))) }
+  inspectBrain(paths) { return {personality:fs.readFileSync(join(paths.人格,'existing-self.md'),'utf8')} }
+ }
+ const profile=dir('custom-layout'),a=dir('custom-a'),b=dir('custom-b')
+ for(const [root,text]of [[a,'existing-a'],[b,'existing-b']]){
+  fs.mkdirSync(join(root,'鱼的大脑/人格'),{recursive:true})
+  fs.writeFileSync(join(root,'鱼的大脑/人格/existing-self.md'),text)
+ }
+ const shared=join(profile,'fish-data.json');save(shared,binding(b));const before=fs.readFileSync(shared)
+ const data=new ExistingBrain(profile,'brain',{legacyRoot:a})
+ assert.equal(data.state().status,'invalid-config')
+ data.initialize({root:a,switchRoot:true});assert.equal(data.state().personality,'existing-a')
+ assert(!fs.existsSync(join(a,'鱼的大脑/人格/generated/SELF.compat.md')))
+ data.initialize({root:b,switchRoot:true});assert.equal(data.state().personality,'existing-b')
+ assert.equal(fs.readFileSync(join(a,'鱼的大脑/人格/existing-self.md'),'utf8'),'existing-a')
+ assert(fs.readFileSync(shared).equals(before))
+})
