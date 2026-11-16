@@ -24,13 +24,13 @@ test('only explicitly addressed native workspace is used', () => {
   assert.equal(conversationWorkspace(ctx, 'missing'), null)
   const value = data('current'); value.initialize({ root: conversationWorkspace(ctx, 'b') }); assert.equal(value.state().root, second)
 })
-for (const order of [['brain', 'body'], ['body', 'brain']]) test('shared binding order ' + order.join(' -> '), () => {
+for (const order of [['brain', 'body'], ['body', 'brain']]) test('independent binding order ' + order.join(' -> '), () => {
   const profile = directory(order.join('-')), first = new ProfileData(profile, order[0]), second = new ProfileData(profile, order[1])
   const selected = directory(order.join('-') + '-root'), other = directory(order.join('-') + '-other')
   first.initialize({ root: selected }); second.initialize({ root: other })
-  assert.equal(first.state().root, selected); assert.equal(second.state().root, selected)
-  assert.deepEqual(new ProfileData(profile, 'brain').binding().components.sort(), ['body', 'brain'])
-  assert(existsSync(join(selected, '饭'))); assert(existsSync(join(selected, '鱼的大脑', '人格', 'generated', 'SELF.compat.md')))
+  assert.equal(first.state().root, selected); assert.equal(second.state().root, other)
+  assert.deepEqual(new ProfileData(profile, 'brain').binding().components, ['brain'])
+  assert(existsSync(join(first.component === 'body' ? selected : other, '饭'))); assert(existsSync(join(first.component === 'brain' ? selected : other, '鱼的大脑', '人格', 'generated', 'SELF.compat.md')))
 })
 test('workspace changes do not move data; explicit root switch preserves old files and persists', () => {
   const value = data('switch'), first = directory('switch-first'), next = directory('switch-next')

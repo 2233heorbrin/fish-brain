@@ -60,6 +60,7 @@ export async function apply(ctx, config) {
   let cancelled = false
   ctx.effect(() => () => { cancelled = true })
   setImmediate(async () => {
+    if (cancelled) return
     try {
       await ctx.loader.await()
       if (!cancelled && lifecycle.mode === 'starting') await lifecycle.enqueue(() => lifecycle.switchTo('disabled'))

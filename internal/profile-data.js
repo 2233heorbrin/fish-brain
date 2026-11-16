@@ -1,7 +1,8 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync, renameSync, statSync } from 'node:fs'
 import { dirname, isAbsolute, join, resolve } from 'node:path'
 
-export const BINDING_FILE = 'fish-data.json'
+export const BINDING_FILE = 'fish-brain-data.json'
+export const LEGACY_BINDING_FILE = 'fish-data.json'
 const read = file => JSON.parse(readFileSync(file, 'utf8'))
 const directory = path => { try { return statSync(path).isDirectory() } catch { return false } }
 const writeOnce = (path, value) => {
@@ -10,22 +11,39 @@ const writeOnce = (path, value) => {
 }
 const json = value => JSON.stringify(value, null, 2) + '\n'
 
-/** One binding per native Profile. No cwd, session recency, or machine defaults. */
+const sameRoot = (a, b) => process.platform === 'win32'
+  ? resolve(a).toLowerCase() === resolve(b).toLowerCase() : resolve(a) === resolve(b)
+function readBinding(file) {
+  let value
+  try { value = read(file) } catch (error) { throw new Error(`FISH_BINDING_INVALID: ${file}: ${error.message}`) }
+  if (value?.schema !== 'fish-profile-data/v1' || (typeof value.root !== 'string' || !isAbsolute(value.root)) ||
+    !Array.isArray(value.components) || value.components.some(c => !['brain', 'body'].includes(c)))
+    throw new Error(`FISH_BINDING_INVALID: ${file}`)
+  return value
+}
+
+/** Component-owned binding. Legacy inputs are consulted only before it exists. */
 export class ProfileData {
-  constructor(profileDir, component, { legacyRoot } = {}) {
+  constructor(profileDir, component, { legacyRoot, legacyRoots = () => [] } = {}) {
     if (!isAbsolute(profileDir || '')) throw new Error('FISH_PROFILE_REQUIRED')
+    if (!['brain', 'body'].includes(component)) throw new Error('FISH_COMPONENT_INVALID')
     this.profileDir = resolve(profileDir)
     this.component = component
-    this.file = join(this.profileDir, BINDING_FILE)
-    if (!existsSync(this.file) && legacyRoot) {
-      writeOnce(this.file, json({ schema: 'fish-profile-data/v1', root: legacyRoot, components: [], origin: 'legacy' }))
-    }
+    this.file = join(this.profileDir, `fish-${component}-data.json`)
+    this.legacyRoots = () => [...(legacyRoot ? [{ source: 'config.legacyRoot', root: legacyRoot }] : []), ...legacyRoots()]
   }
   binding() {
-    if (!existsSync(this.file)) return null
-    const value = read(this.file)
-    if (value.schema !== 'fish-profile-data/v1' || !isAbsolute(value.root || '')) throw new Error('FISH_BINDING_INVALID')
-    return value
+    if (existsSync(this.file)) return readBinding(this.file)
+    const sharedFile = join(this.profileDir, LEGACY_BINDING_FILE)
+    const roots = this.legacyRoots()
+    if (existsSync(sharedFile)) roots.push({ source: sharedFile, root: readBinding(sharedFile).root })
+    if (!roots.length) return null
+    for (const { source, root } of roots) if (typeof root !== 'string' || !isAbsolute(root)) throw new Error(`FISH_BINDING_INVALID: ${source}`)
+    if (roots.some(row => !sameRoot(row.root, roots[0].root)))
+      throw new Error('FISH_BINDING_CONFLICT: ' + roots.map(row => `${row.source}=${row.root}`).join('; '))
+    // Register location only. Initialization below supplements our own structure.
+    writeOnce(this.file, json({ schema: 'fish-profile-data/v1', root: resolve(roots[0].root), components: [], origin: 'legacy' }))
+    return readBinding(this.file)
   }
   paths(root) {
     return this.component === 'brain'
@@ -49,7 +67,8 @@ export class ProfileData {
     } catch (error) { return { status: 'invalid-config', root: null, paths: {}, profileDir: this.profileDir, error: error.message } }
   }
   initialize({ root, switchRoot = false } = {}) {
-    const previous = this.binding()
+    let previous
+    try { previous = this.binding() } catch (error) { if (!switchRoot) throw error }
     if (previous && !switchRoot) root = previous.root
     if (!root) return this.state()
     if (!isAbsolute(root) || !directory(root)) throw new Error('FISH_ROOT_INVALID: 请选择已存在的绝对目录；旧路径不会自动替换')
@@ -71,10 +90,10 @@ export class ProfileData {
       writeOnce(join(paths.hand, '插件注册表', 'registry.json'), json({ schema: 'fish-hand-plugin-registry/v1', plugins: [] }))
     }
     const binding = { schema: 'fish-profile-data/v1', root,
-      components: [...new Set([...(previous?.root === root ? previous.components : []), this.component])],
+      components: [this.component],
       origin: previous?.root === root ? previous.origin : switchRoot ? 'manual' : 'conversation-workspace' }
-    // Synchronous transaction: both plugins in one Host see the committed binding.
-    if (!previous) writeOnce(this.file, json(binding))
+    // Publish only this component's location; never rewrite the shared/other file.
+    if (!existsSync(this.file)) writeOnce(this.file, json(binding))
     else { const temp = this.file + '.tmp'; writeFileSync(temp, json(binding)); renameSync(temp, this.file) }
     return this.state()
   }
@@ -125,8 +144,7 @@ export async function mountProfileData(ctx, data, { prepare = async () => ({}), 
       } catch (error) { return response({ error: error.message }, 400) }
     } }))
   // Upgrades reuse the saved root; no current conversation is needed in that case.
-  if (data.binding()) {
-    try { data.initialize(); await ready() } catch (error) { preparation = { status: 'failed', error: error.message } }
-  }
+  try { if (data.binding()) { data.initialize(); await ready() } }
+  catch (error) { preparation = { status: 'failed', error: error.message } }
   return { state, ready }
 }
